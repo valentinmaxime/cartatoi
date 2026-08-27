@@ -183,15 +183,14 @@ var TRIP_CONFIG = {
                 day: "J7 - Dimanche 04/10",
                 date: "2026-10-04",
                 theme: "Côte Ouest & Maïdo",
-                title: "Hôtel St-Gilles ➔ Piton Maïdo ➔ Survol en hélicoptère (au choix) ➔ Hôtel",
+                title: "Hôtel St-Gilles ➔ Piton Maïdo ➔ Survol en hélicoptère (Corail, 7h10) ➔ Hôtel",
                 center: [-21.030, 55.300],
                 zoom: 11,
                 color: "#2980b9",
                 points: [
                     { name: "Hôtel Le Récif", lat: HOTEL_RECIF.lat, lng: HOTEL_RECIF.lng, icon: 'house' },
                     { name: "Piton Maïdo (Vue 6h00)", time: "06h00", lat: -21.068889, lng: 55.387778, icon: 'blue' },
-                    { name: "Helilagon (Altiport de l'Éperon)", lat: -21.0350364, lng: 55.2607344, icon: 'blue', optional: true, excludeFromRoute: true, note: "Option 1 : \"L'Incontournable\", ~45min, 309€/pers, 3 cirques + Trou de Fer + lagon (pas le volcan). <a href=\"https://helilagon.com/survols/l-incontournable/\" target=\"_blank\" style=\"color:#0f6e77;\">Détails</a>" },
-                    { name: "Corail Hélicoptères (Saint-Paul)", lat: -21.0679094, lng: 55.2498629, icon: 'blue', optional: true, excludeFromRoute: true, note: "Option 2 : \"Tour de l'île\", ~45min, 310€/pers, cirques + Trou de Fer + volcan + lagon. <a href=\"https://www.corail-helicopteres.com/tour/tour-de-l-ile-saint-gilles/\" target=\"_blank\" style=\"color:#0f6e77;\">Détails</a>" },
+                    { name: "Corail Hélicoptères (Saint-Paul)", time: "07h10", lat: -21.0679094, lng: 55.2498629, icon: 'blue', infoLink: "https://www.corail-helicopteres.com/tour/tour-de-l-ile-saint-gilles/", note: "Réservé : \"Tour de l'île\" confirmé pour le dimanche 4 octobre, décollage prévu 7h10. L'heure exacte n'est confirmée que la veille, et le vol est maintenu sous réserve d'un taux de remplissage minimum de 5 personnes." },
                     { name: "Hôtel Le Récif (Lagon)", lat: HOTEL_RECIF.lat, lng: HOTEL_RECIF.lng, icon: 'house' }
                 ]
             },
@@ -314,5 +313,3 @@ var TRIP_CONFIG = {
                 lat: -20.8913291, lng: 55.4877958
             }
         ];
-
-        
