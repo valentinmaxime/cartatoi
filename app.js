@@ -330,9 +330,9 @@ var map = L.map('map', { zoomControl: false }).setView(TRIP_CONFIG.mapCenter, TR
                 var cleanName = name.replace(/\s*\([^)]*\)/g, '').trim();
                 var region = TRIP_CONFIG.googleMapsRegion(lat, lng);
                 var query = `${cleanName}, ${region}`;
-                return `<a class="gmaps-btn" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}" target="_blank" rel="noopener">Y aller</a>`;
+                return `<a class="gmaps-btn" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}" target="_blank" rel="noopener">Google Maps</a>`;
             }
-            return `<a class="gmaps-btn" href="https://www.google.com/maps/search/?api=1&query=${lat},${lng}" target="_blank" rel="noopener">Y aller</a>`;
+            return `<a class="gmaps-btn" href="https://www.google.com/maps/search/?api=1&query=${lat},${lng}" target="_blank" rel="noopener">Google Maps</a>`;
         }
 
         function getRandoBtn(randoLink) {
