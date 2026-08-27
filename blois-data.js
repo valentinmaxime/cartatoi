@@ -65,12 +65,13 @@ var TRIP_CONFIG = {
                 weatherLinkUrl: "https://meteofrance.com/previsions-meteo-france/vernet/31810",
                 date: "2026-08-28",
                 theme: "Route vers Blois",
-                title: "Route Vernet ➔ Blois • Installation à l'hôtel (17h) • Dîner (lieu à définir, 20h)",
+                title: "Route Vernet ➔ Blois • Déjeuner à mi-chemin (Uzerche) • Installation à l'hôtel (17h) • Dîner (lieu à définir, 20h)",
                 center: [47.586, 1.336],
                 zoom: 7,
                 color: "#3498db",
                 points: [
                     { name: VERNET.name, time: "13h00", lat: VERNET.lat, lng: VERNET.lng, icon: 'blue' },
+                    { name: "Déjeuner à Uzerche (mi-chemin)", time: "~15h30", lat: 45.4213444, lng: 1.5635831, icon: 'orange', note: "Village médiéval juste sur l'A20 (sortie 44), quasi aucun détour. 3 bonnes tables à 200m les unes des autres, à choisir sur place : <b>La Table de M</b> (4,5★, 961 avis, cuisine française élevée, jolie bâtisse) · <b>Chez Anroca</b> (4,6★, 319 avis, tenu par des Réunionnais !) · <b>Chez Armand</b> (4,6★, 258 avis, en terrasse au bord de la rivière, plus casual). Les trois servent le vendredi midi." },
                     { name: HOTEL_MERCURE.name, time: "17h00", lat: HOTEL_MERCURE.lat, lng: HOTEL_MERCURE.lng, icon: 'house' }
                 ],
                 extras: [
@@ -136,5 +137,3 @@ var TRIP_CONFIG = {
         // Pas de spécialité locale dédiée pour ce voyage — tableau vide conservé pour que le
         // reste du code (recherche, légende auto-masquée) continue de fonctionner sans changement.
         var specialtyPoints = [];
-
-        
