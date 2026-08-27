@@ -1,1 +1,1 @@
-https://valentinmaxime.github.io/cartatoi/
+https://valentinmaxime.github.io/cartatoi/carte.html
