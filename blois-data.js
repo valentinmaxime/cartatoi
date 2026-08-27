@@ -32,6 +32,10 @@ var TRIP_CONFIG = {
 
     printTitle: 'Mariage à Blois — feuille de route',
 
+    // Page ville officielle Météo-France (motif d'URL confirmé : previsions-meteo-france/{ville}/{code-postal})
+    weatherLinkUrl: 'https://meteofrance.com/previsions-meteo-france/blois/41000',
+    weatherLinkLabel: 'Voir sur Météo France',
+
     // Stat du résumé : pas de rando ici, on compte plutôt les visites optionnelles
     // (Chambord, Cheverny, Château Royal — marquées optional:true dans les données).
     optionalStatKey: 'Visites optionnelles',
@@ -58,6 +62,7 @@ var TRIP_CONFIG = {
         var timelineData = [
             {
                 day: "J1 - Vendredi 28/08",
+                weatherLinkUrl: "https://meteofrance.com/previsions-meteo-france/vernet/31810",
                 date: "2026-08-28",
                 theme: "Route vers Blois",
                 title: "Route Vernet ➔ Blois • Installation à l'hôtel (17h) • Dîner (lieu à définir, 20h)",
@@ -74,6 +79,7 @@ var TRIP_CONFIG = {
             },
             {
                 day: "J2 - Samedi 29/08",
+                weatherLinkUrl: "https://meteofrance.com/previsions-meteo-france/blois/41000",
                 date: "2026-08-29",
                 theme: "Jour du mariage",
                 title: "Petit-déjeuner & préparatifs à l'hôtel • Cérémonie civile (14h15) • Bus vers le château (15h30-16h00) • Cocktail (17h) & dîner/soirée (19h) au Château des Grotteaux",
@@ -92,6 +98,7 @@ var TRIP_CONFIG = {
             },
             {
                 day: "J3 - Dimanche 30/08",
+                weatherLinkUrl: "https://meteofrance.com/previsions-meteo-france/blois/41000",
                 date: "2026-08-30",
                 theme: "Loire Valley & suite des festivités",
                 title: "Fin de soirée au château (bus retour 3h) • Petit-déjeuner • Visite d'un château au choix (Chambord ou Cheverny) • Installation Airbnb (16h) • The Petit Pub (15h) • Dîner (lieu à définir, optionnel)",
@@ -112,6 +119,7 @@ var TRIP_CONFIG = {
             },
             {
                 day: "J4 - Lundi 31/08",
+                weatherLinkUrl: "https://meteofrance.com/previsions-meteo-france/vernet/31810",
                 date: "2026-08-31",
                 theme: "Départ",
                 title: "Château Royal de Blois (optionnel, 10h) • Route retour Blois ➔ Vernet (11h - 18h30)",
@@ -125,8 +133,6 @@ var TRIP_CONFIG = {
             }
         ];
 
-        // Pas de gastronomie/rando dédiée pour ce voyage — tableau vide conservé pour que le
+        // Pas de spécialité locale dédiée pour ce voyage — tableau vide conservé pour que le
         // reste du code (recherche, légende auto-masquée) continue de fonctionner sans changement.
-        var sausagePoints = [];
-
-        
+        var specialtyPoints = [];
