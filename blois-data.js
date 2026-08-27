@@ -136,3 +136,5 @@ var TRIP_CONFIG = {
         // Pas de spécialité locale dédiée pour ce voyage — tableau vide conservé pour que le
         // reste du code (recherche, légende auto-masquée) continue de fonctionner sans changement.
         var specialtyPoints = [];
+
+        

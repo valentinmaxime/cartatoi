@@ -26,13 +26,13 @@
          Config par voyage centralisée ici : ajouter une entrée = ajouter un futur voyage installable. -->
     <link rel="manifest" id="tripManifest" href="manifest-reunion.json">
     <meta name="theme-color" id="tripThemeColor" content="#0e6b6f">
-    <link rel="icon" id="tripIcon" href="icons/icon-reunion-192.png">
-    <link rel="apple-touch-icon" id="tripAppleIcon" href="icons/icon-reunion-192.png">
+    <link rel="icon" id="tripIcon" href="icon-192.png">
+    <link rel="apple-touch-icon" id="tripAppleIcon" href="icon-192.png">
     <script>
         (function() {
             var TRIP_META = {
-                reunion: { title: 'Carte du Voyage - La Réunion & Île Maurice', theme: '#0e6b6f', icon: 'icons/icon-reunion-192.png', manifest: 'manifest-reunion.json' },
-                blois:   { title: 'Carte du Voyage - Mariage à Blois',          theme: '#c8553d', icon: 'icons/icon-blois-192.png',   manifest: 'manifest-blois.json' }
+                reunion: { title: 'Carte du Voyage - La Réunion & Île Maurice', theme: '#0e6b6f', icon: 'icon-192.png', manifest: 'manifest-reunion.json' },
+                blois:   { title: 'Carte du Voyage - Mariage à Blois',          theme: '#c8553d', icon: 'icon-192.png',   manifest: 'manifest-blois.json' }
             };
             var trip = new URLSearchParams(location.search).get('trip');
             if (!trip || !/^[a-z0-9_-]+$/i.test(trip) || !TRIP_META[trip]) return;

@@ -1,4 +1,5 @@
-var map = L.map('map', { zoomControl: false }).setView(TRIP_CONFIG.mapCenter, TRIP_CONFIG.mapZoom);
+
+        var map = L.map('map', { zoomControl: false }).setView(TRIP_CONFIG.mapCenter, TRIP_CONFIG.mapZoom);
         L.control.zoom({ position: 'topright' }).addTo(map);
 
         // Fonds de carte disponibles
@@ -1565,3 +1566,4 @@ var map = L.map('map', { zoomControl: false }).setView(TRIP_CONFIG.mapCenter, TR
         renderBookings();
         updateCountdown();
         overviewBtn.innerText = getOverviewLabel(false);
+    

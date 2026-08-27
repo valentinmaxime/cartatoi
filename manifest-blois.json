@@ -2,14 +2,14 @@
     "name": "Mariage à Blois",
     "short_name": "Blois",
     "description": "Carnet de route interactif — Mariage à Blois, août 2026",
-    "start_url": "./carte.html?trip=blois",
+    "start_url": "./blois.html",
     "scope": "./",
     "display": "standalone",
     "background_color": "#dfe9ea",
     "theme_color": "#c8553d",
     "orientation": "portrait-primary",
     "icons": [
-        { "src": "icons/icon-blois-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-        { "src": "icons/icon-blois-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+        { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+        { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
     ]
 }
