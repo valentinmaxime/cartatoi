@@ -1,5 +1,4 @@
-
-        var map = L.map('map', { zoomControl: false }).setView(TRIP_CONFIG.mapCenter, TRIP_CONFIG.mapZoom);
+var map = L.map('map', { zoomControl: false }).setView(TRIP_CONFIG.mapCenter, TRIP_CONFIG.mapZoom);
         L.control.zoom({ position: 'topright' }).addTo(map);
 
         // Fonds de carte disponibles
@@ -160,7 +159,7 @@
                     dragging: false, scrollWheelZoom: false, doubleClickZoom: false,
                     boxZoom: false, keyboard: false, touchZoom: false, tap: false
                 });
-                L.tileLayer('https://maps.geoapify.com/v1/tile/klokantech-basic/{z}/{x}/{y}.png?apiKey=' + GEOAPIFY_API_KEY + '&lang=fr', {
+                L.tileLayer(`https://maps.geoapify.com/v1/tile/${TRIP_CONFIG.mapStyle}/{z}/{x}/{y}.png?apiKey=${TRIP_CONFIG.geoapifyKey}&lang=fr`, {
                     maxZoom: 10
                 }).addTo(miniMap);
                 var pts = [];
@@ -1541,4 +1540,3 @@
         renderBookings();
         updateCountdown();
         overviewBtn.innerText = getOverviewLabel(false);
-    
