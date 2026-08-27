@@ -16,6 +16,34 @@
 
     <!-- Design system partagé entre tous les voyages -->
     <link rel="stylesheet" href="app.css">
+
+    <!-- PWA : manifest/theme-color/icône réglés ICI, en tout premier et de façon synchrone
+         (avant tout le reste de la page), pour que Chrome les détecte au moment de son test
+         d'installabilité. Un lien manifest ajouté plus tard (ex. en bas de page une fois tout
+         chargé) arrive trop tard : Chrome retombe alors sur un simple raccourci au lieu d'une
+         vraie installation. Un seul fichier HTML reste possible, il suffit de brancher le bon
+         manifest dès le début plutôt qu'à la fin.
+         Config par voyage centralisée ici : ajouter une entrée = ajouter un futur voyage installable. -->
+    <link rel="manifest" id="tripManifest" href="manifest-reunion.json">
+    <meta name="theme-color" id="tripThemeColor" content="#0e6b6f">
+    <link rel="icon" id="tripIcon" href="icons/icon-reunion-192.png">
+    <link rel="apple-touch-icon" id="tripAppleIcon" href="icons/icon-reunion-192.png">
+    <script>
+        (function() {
+            var TRIP_META = {
+                reunion: { title: 'Carte du Voyage - La Réunion & Île Maurice', theme: '#0e6b6f', icon: 'icons/icon-reunion-192.png', manifest: 'manifest-reunion.json' },
+                blois:   { title: 'Carte du Voyage - Mariage à Blois',          theme: '#c8553d', icon: 'icons/icon-blois-192.png',   manifest: 'manifest-blois.json' }
+            };
+            var trip = new URLSearchParams(location.search).get('trip');
+            if (!trip || !/^[a-z0-9_-]+$/i.test(trip) || !TRIP_META[trip]) return;
+            var m = TRIP_META[trip];
+            document.title = m.title;
+            document.getElementById('tripManifest').href = m.manifest;
+            document.getElementById('tripThemeColor').content = m.theme;
+            document.getElementById('tripIcon').href = m.icon;
+            document.getElementById('tripAppleIcon').href = m.icon;
+        })();
+    </script>
 </head>
 <body>
 
@@ -200,16 +228,10 @@
                 return;
             }
 
-            // PWA : manifest propre au voyage (icône, nom, couleur au lancement depuis l'écran
-            // d'accueil) — seulement pour les voyages qui en ont un (KNOWN_TRIPS), pas bloquant
-            // sinon. Le service worker rend l'app installable ; voir sw.js pour son périmètre
-            // (juste app.css/app.js en cache, pas les tuiles ni les données météo/itinéraire).
-            if (KNOWN_TRIPS.indexOf(trip) !== -1) {
-                var manifestLink = document.createElement('link');
-                manifestLink.rel = 'manifest';
-                manifestLink.href = 'manifest-' + trip + '.json';
-                document.head.appendChild(manifestLink);
-            }
+            // Manifest/theme-color/icône déjà réglés dans le <head> (voir plus haut, c'est ce
+            // qui corrige le problème d'installation). Ici, juste le service worker, qui rend
+            // l'app installable ; voir sw.js pour son périmètre (juste app.css/app.js en cache,
+            // pas les tuiles ni les données météo/itinéraire).
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('sw.js').catch(function() {});
             }
