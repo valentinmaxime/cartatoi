@@ -52,25 +52,21 @@ var map = L.map('map', { zoomControl: false }).setView(TRIP_CONFIG.mapCenter, TR
             iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -30], shadowSize: [32, 32]
         });
 
-        // Icône Rougail Saucisse encodée pour Leaflet (badge + saucisse allongée, extrémités nouées)
-        var rawSausageSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="36" height="36">
-            <circle cx="32" cy="32" r="30" fill="#fdebd0" stroke="#a0522d" stroke-width="2.5"/>
-            <g transform="rotate(-25 32 32)">
-                <rect x="12" y="24" width="40" height="16" rx="8" fill="#a0522d" stroke="#6b3410" stroke-width="2"/>
-                <ellipse cx="14" cy="32" rx="3" ry="7" fill="#6b3410"/>
-                <ellipse cx="50" cy="32" rx="3" ry="7" fill="#6b3410"/>
-                <line x1="22" y1="25" x2="22" y2="39" stroke="#6b3410" stroke-width="1.3" opacity="0.45"/>
-                <line x1="32" y1="25" x2="32" y2="39" stroke="#6b3410" stroke-width="1.3" opacity="0.45"/>
-                <line x1="42" y1="25" x2="42" y2="39" stroke="#6b3410" stroke-width="1.3" opacity="0.45"/>
-            </g>
-        </svg>`;
-        var sausageSvg = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(rawSausageSvg);
-
-        var sausageIcon = L.icon({
-            iconUrl: sausageSvg,
-            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-            iconSize: [36, 36], iconAnchor: [18, 36], popupAnchor: [0, -32], shadowSize: [36, 36]
-        });
+        // Icône "spécialité locale" : entièrement pilotée par les données du voyage
+        // (TRIP_CONFIG.specialtyIcon), pas de dessin en dur ici — un voyage sans spécialité
+        // définie (ex. Blois) n'a simplement pas cette icône, et le calque reste vide/masqué.
+        var specialtyIcon = null;
+        if (TRIP_CONFIG.specialtyIcon && TRIP_CONFIG.specialtyIcon.svg) {
+            var specialtySvgUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(TRIP_CONFIG.specialtyIcon.svg);
+            specialtyIcon = L.icon({
+                iconUrl: specialtySvgUrl,
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                iconSize: TRIP_CONFIG.specialtyIcon.size || [36, 36],
+                iconAnchor: TRIP_CONFIG.specialtyIcon.anchor || [18, 36],
+                popupAnchor: [0, -32],
+                shadowSize: TRIP_CONFIG.specialtyIcon.size || [36, 36]
+            });
+        }
 
         // Icône Randonnée encodée pour Leaflet (badge + montagne + sentier balisé)
         var rawHikingSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="36" height="36">
@@ -117,7 +113,7 @@ var map = L.map('map', { zoomControl: false }).setView(TRIP_CONFIG.mapCenter, TR
         // données du moteur de rendu : un fichier data.js n'a jamais besoin de connaître les
         // objets Leaflet, ni l'ordre de chargement des scripts entre eux.
         var ICONS = {
-            house: houseIcon, restaurant: restaurantIcon, sausage: sausageIcon,
+            house: houseIcon, restaurant: restaurantIcon, specialty: specialtyIcon,
             hiking: hikingIcon, tbd: tbdIcon,
             red: redIcon, orange: orangeIcon, violet: violetIcon,
             green: greenIcon, blue: blueIcon, yellow: yellowIcon
@@ -128,7 +124,7 @@ var map = L.map('map', { zoomControl: false }).setView(TRIP_CONFIG.mapCenter, TR
         var allStepsLayer = L.layerGroup().addTo(map);
         var allAccLayer = L.layerGroup().addTo(map);
         var allRestoLayer = L.layerGroup().addTo(map);
-        var allSausageLayer = L.layerGroup().addTo(map);
+        var allSpecialtyLayer = L.layerGroup().addTo(map);
         var allTbdLayer = L.layerGroup().addTo(map);
         var activeRouteLayer = L.layerGroup().addTo(map);
 
@@ -408,8 +404,8 @@ var map = L.map('map', { zoomControl: false }).setView(TRIP_CONFIG.mapCenter, TR
                         marker.addTo(allAccLayer);
                     } else if (pt.icon === 'restaurant') {
                         marker.addTo(allRestoLayer);
-                    } else if (pt.icon === 'sausage') {
-                        marker.addTo(allSausageLayer);
+                    } else if (pt.icon === 'specialty') {
+                        marker.addTo(allSpecialtyLayer);
                     } else {
                         marker.addTo(allStepsLayer);
                     }
@@ -475,12 +471,12 @@ var map = L.map('map', { zoomControl: false }).setView(TRIP_CONFIG.mapCenter, TR
                 .addTo(allTbdLayer);
         });
 
-        // 2. Afficher les points Gastronomie & Saucisse
-        sausagePoints.forEach(function(pt) {
+        // 2. Afficher les points de spécialités locales (propres au voyage, si définies)
+        specialtyPoints.forEach(function(pt) {
             var popupContent = `<div class="popup-eyebrow">Gastronomie</div><div class="popup-title">${pt.name}</div><div class="popup-desc">${pt.desc}</div>${getActionButtons(pt.lat, pt.lng, null, pt.name)}`;
-            var marker = L.marker([pt.lat, pt.lng], { icon: sausageIcon })
+            var marker = L.marker([pt.lat, pt.lng], { icon: specialtyIcon })
                 .bindPopup(popupContent);
-            marker.addTo(allSausageLayer);
+            marker.addTo(allSpecialtyLayer);
         });
 
         // 3. Gestion API OSRM pour calcul de route réelle
@@ -574,7 +570,7 @@ var map = L.map('map', { zoomControl: false }).setView(TRIP_CONFIG.mapCenter, TR
             var present = {
                 acc: all.some(p => p.icon === 'house'),
                 resto: all.some(p => p.icon === 'restaurant'),
-                sausage: all.some(p => p.icon === 'sausage') || (typeof sausagePoints !== 'undefined' && sausagePoints.length > 0),
+                specialty: all.some(p => p.icon === 'specialty') || (typeof specialtyPoints !== 'undefined' && specialtyPoints.length > 0),
                 rando: all.some(p => p.icon === 'hiking' || p.randoLink),
                 foot: all.some(p => p.onFoot),
                 flight: all.some(p => p.flight),
@@ -850,6 +846,13 @@ var map = L.map('map', { zoomControl: false }).setView(TRIP_CONFIG.mapCenter, TR
         var routeBadge = document.getElementById('routeBadge');
         var dayExtra = document.getElementById('dayExtra');
         var weatherBadge = document.getElementById('weatherBadge');
+        // Clic sur la météo → source météo externe. Priorité à l'URL propre au jour sélectionné
+        // (data.weatherLinkUrl, ex. AccuWeather pour un jour à Maurice) si elle existe, sinon
+        // repli sur le lien générique du voyage (TRIP_CONFIG.weatherLinkUrl, ex. Météo France).
+        var currentMeteoUrl = TRIP_CONFIG.weatherLinkUrl || null;
+        weatherBadge.addEventListener('click', function() {
+            if (currentMeteoUrl) window.open(currentMeteoUrl, '_blank', 'noopener');
+        });
         var sunBadge = document.getElementById('sunBadge');
         var timeSlider = document.getElementById('timeSlider');
 
@@ -959,6 +962,13 @@ var map = L.map('map', { zoomControl: false }).setView(TRIP_CONFIG.mapCenter, TR
             routeBadge.innerHTML = `<span class="rb-load">Calcul du trajet…</span>`;
             weatherBadge.innerHTML = `<span class="wl">chargement…</span>`;
             sunBadge.innerHTML = `<span class="wl">chargement…</span>`;
+
+            // Lien météo du jour : priorité à data.weatherLinkUrl/Label (ex. AccuWeather pour
+            // Maurice), repli sur le lien générique du voyage (ex. Météo France).
+            currentMeteoUrl = data.weatherLinkUrl || TRIP_CONFIG.weatherLinkUrl || null;
+            var currentMeteoLabel = data.weatherLinkLabel || TRIP_CONFIG.weatherLinkLabel || 'Voir la météo en détail';
+            weatherBadge.style.cursor = currentMeteoUrl ? 'pointer' : '';
+            weatherBadge.title = currentMeteoUrl ? currentMeteoLabel : '';
 
             var items = timelineList.querySelectorAll('.timeline-item');
             items.forEach((el, i) => {
@@ -1202,8 +1212,8 @@ var map = L.map('map', { zoomControl: false }).setView(TRIP_CONFIG.mapCenter, TR
         document.getElementById('toggleResto').addEventListener('change', function(e) {
             if(e.target.checked) map.addLayer(allRestoLayer); else map.removeLayer(allRestoLayer);
         });
-        document.getElementById('toggleSausage').addEventListener('change', function(e) {
-            if(e.target.checked) map.addLayer(allSausageLayer); else map.removeLayer(allSausageLayer);
+        document.getElementById('toggleSpecialty').addEventListener('change', function(e) {
+            if(e.target.checked) map.addLayer(allSpecialtyLayer); else map.removeLayer(allSpecialtyLayer);
         });
         document.getElementById('toggleTbd').addEventListener('change', function(e) {
             if(e.target.checked) map.addLayer(allTbdLayer); else map.removeLayer(allTbdLayer);
@@ -1262,11 +1272,11 @@ var map = L.map('map', { zoomControl: false }).setView(TRIP_CONFIG.mapCenter, TR
                     searchIndex.push(entry);
                 });
             });
-            if (typeof sausagePoints !== 'undefined') {
-                sausagePoints.forEach(function(p) {
+            if (typeof specialtyPoints !== 'undefined') {
+                specialtyPoints.forEach(function(p) {
                     var k = ptKey(p);
                     if (seen[k]) return;
-                    var entry = { key: k, name: p.name, dayIndex: null, days: ['Gastronomie'], theme: 'Rougail saucisse', hayName: deaccent(p.name), hayTheme: '' };
+                    var entry = { key: k, name: p.name, dayIndex: null, days: ['Spécialités'], theme: TRIP_CONFIG.specialtyLabel || 'Spécialités locales', hayName: deaccent(p.name), hayTheme: '' };
                     seen[k] = entry;
                     searchIndex.push(entry);
                 });
@@ -1530,6 +1540,21 @@ var map = L.map('map', { zoomControl: false }).setView(TRIP_CONFIG.mapCenter, TR
         if (searchInput) searchInput.setAttribute('placeholder', TRIP_CONFIG.searchPlaceholder);
         var statKEl = document.getElementById('summaryHikes') && document.getElementById('summaryHikes').previousElementSibling;
         if (statKEl && statKEl.classList.contains('stat-k')) statKEl.textContent = TRIP_CONFIG.optionalStatKey;
+
+        // Filtre + légende "spécialités locales" : texte et icône entièrement pilotés par
+        // TRIP_CONFIG. Si le voyage n'en définit pas (ex. Blois), on retombe sur un libellé
+        // générique — de toute façon masqué automatiquement par prunePanelEntries() puisque
+        // specialtyPoints est vide dans ce cas.
+        var specialtyLabel = TRIP_CONFIG.specialtyLabel || 'Spécialités locales';
+        var specialtyToggleLabel = document.querySelector('label[data-need="specialty"] input')
+            && document.querySelector('label[data-need="specialty"] input').nextSibling;
+        if (specialtyToggleLabel) specialtyToggleLabel.textContent = ' ' + specialtyLabel;
+        var specialtyLegendText = document.querySelector('.legend-key[data-need="specialty"] span');
+        if (specialtyLegendText) specialtyLegendText.textContent = specialtyLabel;
+        var specialtyLegendIcon = document.querySelector('.legend-key[data-need="specialty"] .legend-icon-slot');
+        if (specialtyLegendIcon && TRIP_CONFIG.specialtyIcon && TRIP_CONFIG.specialtyIcon.svg) {
+            specialtyLegendIcon.innerHTML = TRIP_CONFIG.specialtyIcon.svg.replace('width="36" height="36"', 'width="18" height="18"');
+        }
 
         selectDay(getInitialDayIndex());
         computeTripSummary();

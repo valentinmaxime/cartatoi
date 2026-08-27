@@ -35,10 +35,36 @@ var TRIP_CONFIG = {
 
     printTitle: 'Réunion &amp; Maurice — feuille de route',
 
+    // Site régional officiel de Météo-France pour l'océan Indien. Pas de lien par coordonnées
+    // GPS universel côté Météo-France, donc un seul lien fixe plutôt qu'un lien par jour —
+    // imparfait pour les jours à Maurice (pays différent, hors couverture Météo-France), mais
+    // c'est la ressource officielle française la plus pertinente disponible pour ce voyage.
+    weatherLinkUrl: 'https://meteofrance.re/fr',
+    weatherLinkLabel: 'Voir sur Météo France',
+
     // Stat "Randonnées" du résumé : compte les points marqués avec l'icône rando.
     optionalStatKey: 'Randonnées',
     optionalStatLabel: 'points de rando',
-    optionalStatCounter: function(pt) { return pt.icon === 'hiking'; }
+    optionalStatCounter: function(pt) { return pt.icon === 'hiking'; },
+
+    // Spécialités locales (rougail saucisse, produits du terroir) : libellé + icône propres à
+    // ce voyage. Un voyage sans spécialité définie (ex. Blois) omet simplement ces deux champs.
+    specialtyLabel: 'Rougail saucisse & gastronomie traditionnelle',
+    specialtyIcon: {
+        svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="36" height="36">
+            <circle cx="32" cy="32" r="30" fill="#fdebd0" stroke="#a0522d" stroke-width="2.5"/>
+            <g transform="rotate(-25 32 32)">
+                <rect x="12" y="24" width="40" height="16" rx="8" fill="#a0522d" stroke="#6b3410" stroke-width="2"/>
+                <ellipse cx="14" cy="32" rx="3" ry="7" fill="#6b3410"/>
+                <ellipse cx="50" cy="32" rx="3" ry="7" fill="#6b3410"/>
+                <line x1="22" y1="25" x2="22" y2="39" stroke="#6b3410" stroke-width="1.3" opacity="0.45"/>
+                <line x1="32" y1="25" x2="32" y2="39" stroke="#6b3410" stroke-width="1.3" opacity="0.45"/>
+                <line x1="42" y1="25" x2="42" y2="39" stroke="#6b3410" stroke-width="1.3" opacity="0.45"/>
+            </g>
+        </svg>`,
+        size: [36, 36],
+        anchor: [18, 36]
+    }
 };
 
 // Adresses / Gîtes repères
@@ -75,6 +101,7 @@ var TRIP_CONFIG = {
         var timelineData = [
             {
                 day: "J1 - Lundi 28/09",
+                weatherLinkUrl: "https://meteofrance.re/fr/meteo/salazie",
                 date: "2026-09-28",
                 theme: "Salazie & Mafate",
                 title: "Arrivée St-Denis ➔ Cirque de Salazie ➔ Gîte Grand Îlet",
@@ -92,6 +119,7 @@ var TRIP_CONFIG = {
             },
             {
                 day: "J2 - Mardi 29/09",
+                weatherLinkUrl: "https://meteofrance.re/fr/meteo/salazie",
                 date: "2026-09-29",
                 theme: "Salazie & Mafate",
                 title: "Gîte Grand Îlet ➔ Hell-Bourg ➔ Rando Mafate ➔ Gîte Grand Îlet",
@@ -108,6 +136,7 @@ var TRIP_CONFIG = {
             },
             {
                 day: "J3 - Mercredi 30/09",
+                weatherLinkUrl: "https://meteofrance.re/fr/meteo/saint-philippe",
                 date: "2026-09-30",
                 theme: "Sud Sauvage",
                 title: "Gîte Grand Îlet ➔ Sud Sauvage ➔ Gîte Vincendo",
@@ -128,6 +157,7 @@ var TRIP_CONFIG = {
             },
             {
                 day: "J4 - Jeudi 01/10",
+                weatherLinkUrl: "https://meteofrance.re/fr/meteo/le-tampon",
                 date: "2026-10-01",
                 theme: "Piton de la Fournaise",
                 title: "Gîte Vincendo ➔ Bourg-Murat ➔ Nez de Bœuf ➔ Cratère Commerson ➔ Piton de la Fournaise (Plaine des Sables) ➔ Gîte Vincendo",
@@ -148,6 +178,7 @@ var TRIP_CONFIG = {
             },
             {
                 day: "J5 - Vendredi 02/10",
+                weatherLinkUrl: "https://meteofrance.re/fr/meteo/saint-louis",
                 date: "2026-10-02",
                 theme: "Les Makes",
                 title: "Gîte Vincendo ➔ Les Makes ➔ Gîte Vincendo",
@@ -164,6 +195,7 @@ var TRIP_CONFIG = {
             },
             {
                 day: "J6 - Samedi 03/10",
+                weatherLinkUrl: "https://meteofrance.re/fr/meteo/saint-paul",
                 date: "2026-10-03",
                 theme: "Côte Ouest & Maïdo",
                 title: "Gîte Vincendo ➔ St-Pierre ➔ Hôtel Le Récif (St-Gilles)",
@@ -172,7 +204,7 @@ var TRIP_CONFIG = {
                 color: "#2980b9",
                 points: [
                     { name: "Gîte L'Arbre de Vie", lat: GITE_ARBRE_VIE.lat, lng: GITE_ARBRE_VIE.lng, icon: 'house' },
-                    { name: "Marché Forain de St-Pierre", lat: -21.3399311, lng: 55.4597428, icon: 'sausage' },
+                    { name: "Marché Forain de St-Pierre", lat: -21.3399311, lng: 55.4597428, icon: 'specialty' },
                     { name: "Saga des Rhums (Isautier)", lat: -21.3123309, lng: 55.4657345, icon: 'blue', note: "Pass dégustation à réserver + prendre la confiture crème de banane (pour Mélanie)" },
                     { name: "Domaine du Café Grillé", lat: -21.306886, lng: 55.423972, icon: 'blue' },
                     { name: "Plage de l'Étang-Salé", lat: -21.2622774, lng: 55.3320837, icon: 'blue' },
@@ -181,6 +213,7 @@ var TRIP_CONFIG = {
             },
             {
                 day: "J7 - Dimanche 04/10",
+                weatherLinkUrl: "https://meteofrance.re/fr/meteo/saint-paul",
                 date: "2026-10-04",
                 theme: "Côte Ouest & Maïdo",
                 title: "Hôtel St-Gilles ➔ Piton Maïdo ➔ Survol en hélicoptère (Corail, 7h10) ➔ Hôtel",
@@ -196,6 +229,7 @@ var TRIP_CONFIG = {
             },
             {
                 day: "J8 - Lundi 05/10",
+                weatherLinkUrl: "https://meteofrance.re/fr/meteo/saint-paul",
                 date: "2026-10-05",
                 theme: "Côte Ouest & Maïdo",
                 title: "Hôtel St-Gilles ➔ Jardin d'Éden ➔ St-Leu ➔ Hôtel",
@@ -212,6 +246,7 @@ var TRIP_CONFIG = {
             },
             {
                 day: "J9 - Mardi 06/10",
+                weatherLinkUrl: "https://meteofrance.re/fr/meteo/saint-paul",
                 date: "2026-10-06",
                 theme: "Côte Ouest & Maïdo",
                 title: "Hôtel ➔ Plage de l'Hermitage (Baignade & snorkeling) ➔ Hôtel",
@@ -226,6 +261,7 @@ var TRIP_CONFIG = {
             },
             {
                 day: "J10 - Mercredi 07/10",
+                weatherLinkUrl: "https://meteofrance.re/fr/meteo/sainte-marie",
                 date: "2026-10-07",
                 theme: "Île Maurice",
                 title: "Hôtel ➔ Boucan Canot ➔ St-Paul ➔ Aéroport St-Denis ➔ Hôtel Maurice",
@@ -243,6 +279,8 @@ var TRIP_CONFIG = {
             },
             {
                 day: "J11 - Jeudi 08/10",
+                weatherLinkUrl: "https://www.accuweather.com/fr/mu/grand-baie/235102/daily-weather-forecast/235102",
+                weatherLinkLabel: "Voir sur AccuWeather",
                 date: "2026-10-08",
                 theme: "Île Maurice",
                 title: "Plages ➔ Château de Labourdonnais ➔ Hôtel",
@@ -257,6 +295,8 @@ var TRIP_CONFIG = {
             },
             {
                 day: "J12 - Vendredi 09/10",
+                weatherLinkUrl: "https://www.accuweather.com/fr/mu/grand-baie/235102/daily-weather-forecast/235102",
+                weatherLinkLabel: "Voir sur AccuWeather",
                 date: "2026-10-09",
                 theme: "Île Maurice",
                 title: "Hôtel Grand Baie ➔ Jardin Pamplemousses & Sucre ➔ Hôtel",
@@ -272,6 +312,8 @@ var TRIP_CONFIG = {
             },
             {
                 day: "J13 - Samedi 10/10",
+                weatherLinkUrl: "https://www.accuweather.com/fr/mu/grand-baie/235102/daily-weather-forecast/235102",
+                weatherLinkLabel: "Voir sur AccuWeather",
                 date: "2026-10-10",
                 theme: "Île Maurice",
                 title: "Massages ➔ Aéroport Maurice (Départ 19h55)",
@@ -285,8 +327,8 @@ var TRIP_CONFIG = {
             }
         ];
 
-        // Points Gastronomiques et Artisanaux (Indépendants)
-        var sausagePoints = [
+        // Points de spécialités locales (indépendants de la timeline)
+        var specialtyPoints = [
             {
                 name: "La Case de l'Oncle Tom",
                 desc: "Table locale et conviviale axée sur le partage et le respect des saveurs réunionnaises d'autrefois.",
