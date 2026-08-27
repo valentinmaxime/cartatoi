@@ -29,11 +29,25 @@
     <link rel="icon" id="tripIcon" href="icon-192.png">
     <link rel="apple-touch-icon" id="tripAppleIcon" href="icon-192.png">
     <script>
+        // Un seul objet partagé (pas de variable globale ailleurs) : le script du head s'en
+        // sert pour le manifest/icône, le script du body pour l'écran de sélection des voyages.
+        var TRIP_META = {
+            reunion: {
+                title: 'Carte du Voyage - La Réunion & Île Maurice',
+                short: 'Réunion & Maurice',
+                subtitle: '13 jours · 28 septembre → 10 octobre 2026',
+                accent: '#27655e',
+                theme: '#fbfaf7', icon: 'icon-192.png', manifest: 'manifest-reunion.json'
+            },
+            blois: {
+                title: 'Carte du Voyage - Mariage à Blois',
+                short: 'Mariage à Blois',
+                subtitle: '28 → 31 août 2026',
+                accent: '#b57a1e',
+                theme: '#fbfaf7', icon: 'icon-192.png', manifest: 'manifest-blois.json'
+            }
+        };
         (function() {
-            var TRIP_META = {
-                reunion: { title: 'Carte du Voyage - La Réunion & Île Maurice', theme: '#fbfaf7', icon: 'icon-192.png', manifest: 'manifest-reunion.json' },
-                blois:   { title: 'Carte du Voyage - Mariage à Blois',          theme: '#fbfaf7', icon: 'icon-192.png',   manifest: 'manifest-blois.json' }
-            };
             var trip = new URLSearchParams(location.search).get('trip');
             if (!trip || !/^[a-z0-9_-]+$/i.test(trip) || !TRIP_META[trip]) return;
             var m = TRIP_META[trip];
@@ -207,18 +221,32 @@
     <script>
         // Charge dynamiquement le fichier de données du voyage demandé (?trip=...), puis le
         // moteur partagé (app.js) une fois les données prêtes. Un seul fichier HTML pour tous
-        // les voyages : ajouter un voyage = ajouter un fichier {nom}-data.js, rien d'autre.
+        // les voyages : ajouter un voyage = ajouter un fichier {nom}-data.js + une entrée dans
+        // TRIP_META (tout en haut du head), rien d'autre.
         (function() {
-            // Mise à jour à chaque nouveau voyage ajouté, uniquement pour le message d'erreur
-            // ci-dessous (liste de suggestions) — n'importe quel {nom}-data.js présent à côté
-            // de ce fichier fonctionne, listé ici ou non.
-            var KNOWN_TRIPS = ['reunion', 'blois'];
+            function renderPicker(errorHtml) {
+                var cards = Object.keys(TRIP_META).map(function(key) {
+                    var m = TRIP_META[key];
+                    return '<a class="picker-card" href="?trip=' + encodeURIComponent(key) + '" style="--card-accent:' + m.accent + '">' +
+                        '<span class="picker-card-mark"><img src="icon-192.png" alt=""></span>' +
+                        '<span class="picker-card-body">' +
+                            '<span class="picker-card-title">' + m.short + '</span>' +
+                            '<span class="picker-card-sub">' + m.subtitle + '</span>' +
+                        '</span>' +
+                        '<span class="picker-card-go" aria-hidden="true">→</span>' +
+                    '</a>';
+                }).join('');
 
-            function showMessage(html) {
                 document.body.innerHTML =
-                    '<div style="max-width:560px;margin:15vh auto 0;padding:0 24px;' +
-                    'font-family:system-ui,-apple-system,sans-serif;line-height:1.6;color:#12312f;">' +
-                    '<h1 style="font-size:20px;margin-bottom:8px;">Carte de voyage</h1>' + html + '</div>';
+                    '<div class="picker-wrap">' +
+                        '<div class="picker-inner">' +
+                            '<img src="icon-192.png" class="picker-mark" alt="">' +
+                            '<div class="picker-eyebrow">Carnet de route</div>' +
+                            '<h1 class="picker-title">Choisis un voyage</h1>' +
+                            (errorHtml || '') +
+                            '<div class="picker-list">' + cards + '</div>' +
+                        '</div>' +
+                    '</div>';
             }
 
             var params = new URLSearchParams(location.search);
@@ -228,12 +256,12 @@
             // underscore) : ni chemin, ni URL externe, ne peut pas sortir de ce dossier.
             if (trip && !/^[a-z0-9_-]+$/i.test(trip)) trip = null;
 
-            var suggestions = '<p>Voyages disponibles : ' + KNOWN_TRIPS.map(function(t) {
-                return '<a href="?trip=' + encodeURIComponent(t) + '">' + t + '</a>';
-            }).join(' · ') + '</p>';
-
             if (!trip) {
-                showMessage('<p>Aucun voyage précisé dans l\'adresse. Ajoute <code>?trip=nom</code> à l\'URL.</p>' + suggestions);
+                renderPicker();
+                return;
+            }
+            if (!TRIP_META[trip]) {
+                renderPicker('<p class="picker-error">Voyage « ' + trip + ' » inconnu.</p>');
                 return;
             }
 
@@ -251,12 +279,12 @@
                 var engineScript = document.createElement('script');
                 engineScript.src = 'app.js';
                 engineScript.onerror = function() {
-                    showMessage('<p>Le moteur (<code>app.js</code>) n\'a pas pu être chargé.</p>');
+                    renderPicker('<p class="picker-error">Le moteur (app.js) n\'a pas pu être chargé.</p>');
                 };
                 document.body.appendChild(engineScript);
             };
             dataScript.onerror = function() {
-                showMessage('<p>Voyage « ' + trip + ' » introuvable (fichier <code>' + trip + '-data.js</code> manquant).</p>' + suggestions);
+                renderPicker('<p class="picker-error">Voyage « ' + trip + ' » introuvable (fichier ' + trip + '-data.js manquant).</p>');
             };
             document.body.appendChild(dataScript);
         })();
