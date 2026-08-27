@@ -200,6 +200,20 @@
                 return;
             }
 
+            // PWA : manifest propre au voyage (icône, nom, couleur au lancement depuis l'écran
+            // d'accueil) — seulement pour les voyages qui en ont un (KNOWN_TRIPS), pas bloquant
+            // sinon. Le service worker rend l'app installable ; voir sw.js pour son périmètre
+            // (juste app.css/app.js en cache, pas les tuiles ni les données météo/itinéraire).
+            if (KNOWN_TRIPS.indexOf(trip) !== -1) {
+                var manifestLink = document.createElement('link');
+                manifestLink.rel = 'manifest';
+                manifestLink.href = 'manifest-' + trip + '.json';
+                document.head.appendChild(manifestLink);
+            }
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('sw.js').catch(function() {});
+            }
+
             var dataScript = document.createElement('script');
             dataScript.src = trip + '-data.js';
             dataScript.onload = function() {
