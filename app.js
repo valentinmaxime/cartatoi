@@ -1,5 +1,4 @@
-
-        var map = L.map('map', { zoomControl: false }).setView(TRIP_CONFIG.mapCenter, TRIP_CONFIG.mapZoom);
+var map = L.map('map', { zoomControl: false }).setView(TRIP_CONFIG.mapCenter, TRIP_CONFIG.mapZoom);
         L.control.zoom({ position: 'topright' }).addTo(map);
 
         // Gamme des jours : mêmes teintes que les données d'origine mais sourdes et de
@@ -1588,12 +1587,12 @@
         var specialtyToggleLabel = document.querySelector('label[data-need="specialty"] input')
             && document.querySelector('label[data-need="specialty"] input').nextSibling;
         if (specialtyToggleLabel) specialtyToggleLabel.textContent = ' ' + specialtyLabel;
-        var specialtyLegendText = document.querySelector('.legend-key[data-need="specialty"] span');
+        // :last-child (pas juste "span") : la pastille-lettre ("S") est aussi un <span>, il ne
+        // faut surtout pas écraser son contenu avec le libellé complet — seul le texte à côté
+        // doit changer. La pastille elle-même suit désormais la convention N/R/S du reste de la
+        // légende (lettre fixe dans le HTML), donc plus d'injection de SVG ici.
+        var specialtyLegendText = document.querySelector('.legend-key[data-need="specialty"] span:last-child');
         if (specialtyLegendText) specialtyLegendText.textContent = specialtyLabel;
-        var specialtyLegendIcon = document.querySelector('.legend-key[data-need="specialty"] .legend-icon-slot');
-        if (specialtyLegendIcon && TRIP_CONFIG.specialtyIcon && TRIP_CONFIG.specialtyIcon.svg) {
-            specialtyLegendIcon.innerHTML = TRIP_CONFIG.specialtyIcon.svg.replace('width="36" height="36"', 'width="18" height="18"');
-        }
 
         selectDay(getInitialDayIndex());
         computeTripSummary();
