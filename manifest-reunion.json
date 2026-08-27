@@ -2,7 +2,7 @@
     "name": "Voyage Réunion & Maurice",
     "short_name": "Réunion & Maurice",
     "description": "Carnet de route interactif — La Réunion & Île Maurice, 2026",
-    "start_url": "./reunion.html",
+    "start_url": "./carte.html?trip=reunion",
     "scope": "./",
     "display": "standalone",
     "background_color": "#dfe9ea",

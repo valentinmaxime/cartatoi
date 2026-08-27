@@ -2,6 +2,14 @@
         var map = L.map('map', { zoomControl: false }).setView(TRIP_CONFIG.mapCenter, TRIP_CONFIG.mapZoom);
         L.control.zoom({ position: 'topright' }).addTo(map);
 
+        // Gamme des jours : mêmes teintes que les données d'origine mais sourdes et de
+        // clarté homogène, pour rester distinctes sans saturer la carte. Appliquée ici,
+        // donc aucun fichier de données à modifier.
+        var DAY_COLORS = ['#1f6f63', '#2f5d8a', '#8a5320', '#6b7a26', '#8c4242', '#5a4a8f', '#2f7a4a', '#a5762b'];
+        if (typeof timelineData !== 'undefined') {
+            timelineData.forEach(function(d, i) { d.color = DAY_COLORS[i % DAY_COLORS.length]; });
+        }
+
         // Fonds de carte disponibles
         // Note : Geoapify (service commercial, palier gratuit ~360 000 tuiles/mois) avec le
         // paramètre lang=fr qui force l'affichage en français sur toutes les tuiles — plus
@@ -20,8 +28,8 @@
         // Relief (OpenTopoMap) : seulement pour les voyages avec de vraies randos
         // (TRIP_CONFIG.showRelief), inutile sinon.
         var layersControl = {
-            "🗺️ Plan": streetLayer,
-            "🛰️ Satellite": satelliteLayer
+            "Plan": streetLayer,
+            "Satellite": satelliteLayer
         };
         if (TRIP_CONFIG.showRelief) {
             var reliefLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
@@ -29,64 +37,97 @@
                 subdomains: 'abc',
                 maxZoom: 17
             });
-            layersControl["⛰️ Relief"] = reliefLayer;
+            layersControl["Relief"] = reliefLayer;
         }
-        L.control.layers(layersControl, null, { position: 'topright', collapsed: true }).addTo(map);
+        // Sélecteur de fond de carte maison : le contrôle Leaflet natif s'ouvre au survol
+        // (déclenchements involontaires + sprite d'origine peu lisible). Ici : ouverture au
+        // clic, cases stylées, fermeture au clic sur la carte.
+        var BaseLayersControl = L.Control.extend({
+            options: { position: 'topright' },
+            onAdd: function() {
+                var wrap = L.DomUtil.create('div', 'layers-ctl');
+                L.DomEvent.disableClickPropagation(wrap);
+                L.DomEvent.disableScrollPropagation(wrap);
+                var btn = L.DomUtil.create('button', 'map-btn', wrap);
+                btn.type = 'button';
+                btn.title = 'Fond de carte';
+                btn.setAttribute('aria-label', 'Fond de carte');
+                btn.innerHTML = "<svg viewBox='0 0 20 20' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><path d='M10 2.8 17.2 6.5 10 10.2 2.8 6.5 10 2.8Z'/><path d='M3.4 10.2 10 13.5l6.6-3.3'/><path d='M3.4 13.6 10 16.9l6.6-3.3'/></svg>";
+                var menu = L.DomUtil.create('div', 'layers-menu', wrap);
+                var head = L.DomUtil.create('span', 'lm-title', menu);
+                head.textContent = 'Fond de carte';
+                var names = Object.keys(layersControl);
+                var rows = [];
+                names.forEach(function(name, i) {
+                    var row = L.DomUtil.create('button', 'layers-opt' + (i === 0 ? ' is-on' : ''), menu);
+                    row.type = 'button';
+                    row.innerHTML = "<span class='lo-tick'></span><span>" + name + "</span>";
+                    rows.push(row);
+                    L.DomEvent.on(row, 'click', function(e) {
+                        L.DomEvent.stop(e);
+                        names.forEach(function(n) {
+                            if (map.hasLayer(layersControl[n])) map.removeLayer(layersControl[n]);
+                        });
+                        map.addLayer(layersControl[name]);
+                        rows.forEach(function(r) { L.DomUtil.removeClass(r, 'is-on'); });
+                        L.DomUtil.addClass(row, 'is-on');
+                        setOpen(false);
+                    });
+                });
+                function setOpen(v) {
+                    if (v) L.DomUtil.addClass(wrap, 'is-open');
+                    else L.DomUtil.removeClass(wrap, 'is-open');
+                }
+                L.DomEvent.on(btn, 'click', function(e) {
+                    L.DomEvent.stop(e);
+                    setOpen(!L.DomUtil.hasClass(wrap, 'is-open'));
+                });
+                map.on('click movestart', function() { setOpen(false); });
+                document.addEventListener('keydown', function(e) { if (e.key === 'Escape') setOpen(false); });
+                return wrap;
+            }
+        });
+        map.addControl(new BaseLayersControl());
 
         function createIcon(color) {
-            return L.icon({
-                iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
-                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+            // Pastille encre : la couleur du jour reste sur le tracé et le numéro d'étape,
+            // elle ne teinte plus le marqueur lui-même.
+            return L.divIcon({
+                className: '',
+                html: '<div class="dot-marker is-step"></div>',
+                iconSize: [24, 24], iconAnchor: [12, 12], popupAnchor: [0, -14]
             });
         }
 
-        var houseIcon = L.icon({
-            iconUrl: 'https://img.icons8.com/color/48/000000/home--v1.png',
-            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-            iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -30], shadowSize: [32, 32]
+        var houseIcon = L.divIcon({
+            className: '',
+            html: '<div class="dot-marker is-acc"><svg viewBox=\'0 0 20 20\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'1.7\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><path d=\'M3.2 9.2 10 4l6.8 5.2V16H3.2z\'/></svg></div>',
+            iconSize: [28, 28], iconAnchor: [14, 14], popupAnchor: [0, -16]
         });
 
-        var restaurantIcon = L.icon({
-            iconUrl: 'https://img.icons8.com/color/48/000000/restaurant.png',
-            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-            iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -30], shadowSize: [32, 32]
+        var restaurantIcon = L.divIcon({
+            className: '',
+            html: '<div class="dot-marker is-resto"><svg viewBox=\'0 0 20 20\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'1.7\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><path d=\'M6.6 3.4v3.4a2 2 0 0 0 4 0V3.4\'/><path d=\'M8.6 6.8V16.6\'/><path d=\'M14.2 3.4V16.6\'/></svg></div>',
+            iconSize: [26, 26], iconAnchor: [13, 13], popupAnchor: [0, -15]
         });
 
         // Icône "spécialité locale" : entièrement pilotée par les données du voyage
         // (TRIP_CONFIG.specialtyIcon), pas de dessin en dur ici — un voyage sans spécialité
         // définie (ex. Blois) n'a simplement pas cette icône, et le calque reste vide/masqué.
         var specialtyIcon = null;
-        if (TRIP_CONFIG.specialtyIcon && TRIP_CONFIG.specialtyIcon.svg) {
-            var specialtySvgUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(TRIP_CONFIG.specialtyIcon.svg);
-            specialtyIcon = L.icon({
-                iconUrl: specialtySvgUrl,
-                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                iconSize: TRIP_CONFIG.specialtyIcon.size || [36, 36],
-                iconAnchor: TRIP_CONFIG.specialtyIcon.anchor || [18, 36],
-                popupAnchor: [0, -32],
-                shadowSize: TRIP_CONFIG.specialtyIcon.size || [36, 36]
+        if (TRIP_CONFIG.specialtyLabel || (TRIP_CONFIG.specialtyIcon && TRIP_CONFIG.specialtyIcon.svg)) {
+            specialtyIcon = L.divIcon({
+                className: '',
+                html: '<div class="dot-marker is-specialty"><svg viewBox=\'0 0 20 20\' fill=\'none\' stroke=\'currentColor\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><path d=\'M5.6 4.8A7.6 7.6 0 0 0 15.2 14.4\' stroke-width=\'4.6\'/><path d=\'M4.1 3.9 6.6 6.1M13.7 13.3 16.1 15.6\' stroke-width=\'1.5\'/></svg></div>',
+                iconSize: [26, 26], iconAnchor: [13, 13], popupAnchor: [0, -15]
             });
         }
 
         // Icône Randonnée encodée pour Leaflet (badge + montagne + sentier balisé)
-        var rawHikingSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="36" height="36">
-            <circle cx="32" cy="32" r="30" fill="#16a085" stroke="#ffffff" stroke-width="3"/>
-            <path d="M10,44 L24,20 L31,32 L38,22 L54,44 Z" fill="#ffffff"/>
-            <path d="M24,20 L28,26 L24,32 L20,26 Z" fill="#eafaf1"/>
-            <path d="M38,22 L41,27 L38,32 L35,27 Z" fill="#eafaf1"/>
-            <circle cx="16" cy="46" r="2" fill="#16a085"/>
-            <circle cx="24" cy="42" r="2" fill="#16a085"/>
-            <circle cx="32" cy="46" r="2" fill="#16a085"/>
-            <circle cx="40" cy="42" r="2" fill="#16a085"/>
-            <circle cx="48" cy="46" r="2" fill="#16a085"/>
-        </svg>`;
-        var hikingSvg = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(rawHikingSvg);
-
-        var hikingIcon = L.icon({
-            iconUrl: hikingSvg,
-            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-            iconSize: [36, 36], iconAnchor: [18, 36], popupAnchor: [0, -32], shadowSize: [36, 36]
+        var hikingIcon = L.divIcon({
+            className: '',
+            html: '<div class="dot-marker is-hiking">&#9650;</div>',
+            iconSize: [26, 26], iconAnchor: [13, 13], popupAnchor: [0, -15]
         });
 
         var redIcon = createIcon('red');
@@ -99,14 +140,10 @@
         // Icône "activité(s) à définir" : cercle pointillé + point d'interrogation, pour
         // signaler sur la carte les activités sans lieu précis, sans inventer de coordonnées
         // exactes non vérifiées (même mécanisme que sur la carte Blois).
-        var rawTbdSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="34" height="34">
-            <circle cx="32" cy="32" r="27" fill="#f4f6f7" stroke="#7f8c8d" stroke-width="3" stroke-dasharray="5,4"/>
-            <text x="32" y="43" font-size="32" font-family="Arial, sans-serif" font-weight="bold" fill="#7f8c8d" text-anchor="middle">?</text>
-        </svg>`;
-        var tbdSvg = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(rawTbdSvg);
-        var tbdIcon = L.icon({
-            iconUrl: tbdSvg,
-            iconSize: [34, 34], iconAnchor: [17, 17], popupAnchor: [0, -15]
+        var tbdIcon = L.divIcon({
+            className: '',
+            html: '<div class="dot-marker is-tbd">?</div>',
+            iconSize: [24, 24], iconAnchor: [12, 12], popupAnchor: [0, -14]
         });
 
         // Table de correspondance clé texte (utilisée dans les fichiers de données, ex.
@@ -184,11 +221,12 @@
         var LocateControl = L.Control.extend({
             options: { position: 'topright' },
             onAdd: function() {
-                var container = L.DomUtil.create('div', 'leaflet-bar');
-                var link = L.DomUtil.create('a', 'locate-btn', container);
-                link.href = '#';
+                var container = L.DomUtil.create('div', 'locate-ctl');
+                var link = L.DomUtil.create('button', 'map-btn locate-btn', container);
+                link.type = 'button';
                 link.title = 'Me localiser';
-                link.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path></svg>';
+                link.setAttribute('aria-label', 'Me localiser');
+                link.innerHTML = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="3.4"></circle><circle cx="10" cy="10" r="1" fill="currentColor" stroke="none"></circle><path d="M10 1.6v2.4M10 16v2.4M1.6 10h2.4M16 10h2.4"></path></svg>';
                 L.DomEvent.disableClickPropagation(container);
                 L.DomEvent.on(link, 'click', function(e) {
                     L.DomEvent.stop(e);
@@ -280,7 +318,7 @@
         // Fonctions auxiliaires pour générer les boutons de navigation dans les popups
         function getWazeBtn(lat, lng) {
             // Format officiel Waze Deep Links : www. + virgule encodée + zoom (sinon lien peu fiable)
-            return `<a class="waze-btn" href="https://www.waze.com/ul?ll=${lat}%2C${lng}&navigate=yes&zoom=17" target="_blank" rel="noopener">🚙 Waze</a>`;
+            return `<a class="waze-btn" href="https://www.waze.com/ul?ll=${lat}%2C${lng}&navigate=yes&zoom=17" target="_blank" rel="noopener">Waze</a>`;
         }
 
         function getGoogleMapsBtn(lat, lng, name) {
@@ -293,26 +331,26 @@
                 var cleanName = name.replace(/\s*\([^)]*\)/g, '').trim();
                 var region = TRIP_CONFIG.googleMapsRegion(lat, lng);
                 var query = `${cleanName}, ${region}`;
-                return `<a class="gmaps-btn" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}" target="_blank" rel="noopener">🗺️ Google Maps</a>`;
+                return `<a class="gmaps-btn" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}" target="_blank" rel="noopener">Y aller</a>`;
             }
-            return `<a class="gmaps-btn" href="https://www.google.com/maps/search/?api=1&query=${lat},${lng}" target="_blank" rel="noopener">🗺️ Google Maps</a>`;
+            return `<a class="gmaps-btn" href="https://www.google.com/maps/search/?api=1&query=${lat},${lng}" target="_blank" rel="noopener">Y aller</a>`;
         }
 
         function getRandoBtn(randoLink) {
             if (!randoLink) return '';
             var btns = '';
             if (randoLink.randopitons) {
-                btns += `<a class="rando-btn" href="${randoLink.randopitons}" target="_blank" rel="noopener">🥾 Randopitons</a>`;
+                btns += `<a class="rando-btn" href="${randoLink.randopitons}" target="_blank" rel="noopener">Randopitons</a>`;
             }
             if (randoLink.visorando) {
-                btns += `<a class="rando-btn" href="${randoLink.visorando}" target="_blank" rel="noopener">🥾 Visorando</a>`;
+                btns += `<a class="rando-btn" href="${randoLink.visorando}" target="_blank" rel="noopener">Visorando</a>`;
             }
             return btns;
         }
 
         function getInfoBtn(infoLink) {
             if (!infoLink) return '';
-            return `<a class="info-btn" href="${infoLink}" target="_blank" rel="noopener">ℹ️ Site officiel</a>`;
+            return `<a class="info-btn" href="${infoLink}" target="_blank" rel="noopener">Site officiel</a>`;
         }
 
         function getActionButtons(lat, lng, randoLink, name, infoLink) {
@@ -1567,3 +1605,47 @@
         updateCountdown();
         overviewBtn.innerText = getOverviewLabel(false);
     
+
+        // ====================================================================
+        // Fiche de lieu : sur desktop la bulle reste ancrée au point (elle donne
+        // le contexte géographique) ; sur mobile elle devient une feuille
+        // glissante en bas d'écran, seul format où une fiche de 280 px tient.
+        // Les bulles de tracés (polylignes) restent natives dans les deux cas.
+        // ====================================================================
+        (function() {
+            var card = document.getElementById('placeCard');
+            if (!card) return;
+            var body = card.querySelector('.pc-body');
+            var closeBtn = card.querySelector('.pc-close');
+            var selected = null;
+            var isMobile = function() { return window.matchMedia('(max-width: 560px)').matches; };
+
+            function deselect() {
+                if (selected && selected._icon) selected._icon.classList.remove('is-selected');
+                selected = null;
+            }
+            function closeCard() {
+                card.classList.remove('open');
+                deselect();
+            }
+            if (closeBtn) closeBtn.addEventListener('click', closeCard);
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && card.classList.contains('open')) closeCard();
+            });
+            map.on('click', closeCard);
+            map.on('popupclose', function() { if (!card.classList.contains('open')) deselect(); });
+
+            map.on('popupopen', function(e) {
+                var src = e.popup._source;
+                if (!src || typeof src.getLatLng !== 'function') return; // polyligne
+                deselect();
+                selected = src;
+                if (src._icon) src._icon.classList.add('is-selected');
+                if (!isMobile()) { card.classList.remove('open'); return; }
+                var content = e.popup.getContent();
+                if (typeof content !== 'string') return;
+                map.closePopup(e.popup);
+                body.innerHTML = content;
+                card.classList.add('open');
+            });
+        })();

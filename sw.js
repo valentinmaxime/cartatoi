@@ -2,7 +2,7 @@
 // Android pour proposer "Ajouter à l'écran d'accueil" comme une vraie PWA, pas un simple
 // favori), et met en cache les fichiers propres à l'app (pas les tuiles de carte ni les API
 // météo/itinéraire — ça, c'est un chantier à part, plus gros, pas fait ici).
-var CACHE_NAME = 'carte-voyage-v1';
+var CACHE_NAME = 'carte-voyage-v2';
 var CORE_FILES = [
     './app.css',
     './app.js'
@@ -45,7 +45,10 @@ self.addEventListener('fetch', function(event) {
                 return response;
             }).catch(function() { return cached; });
             // Cache d'abord si dispo (rapide, fonctionne hors-ligne), sinon réseau.
-            return cached || network;
+            // Cache d'abord seulement pour app.css / app.js déjà à jour : on privilégie
+            // le réseau puis le cache en secours, sinon une nouvelle version du design
+            // reste invisible tant que le cache n'est pas vidé à la main.
+            return network || cached;
         })
     );
 });

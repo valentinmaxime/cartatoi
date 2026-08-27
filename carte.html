@@ -8,7 +8,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 
     <!-- Leaflet CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -25,14 +25,14 @@
          manifest dès le début plutôt qu'à la fin.
          Config par voyage centralisée ici : ajouter une entrée = ajouter un futur voyage installable. -->
     <link rel="manifest" id="tripManifest" href="manifest-reunion.json">
-    <meta name="theme-color" id="tripThemeColor" content="#0e6b6f">
+    <meta name="theme-color" id="tripThemeColor" content="#fbfaf7">
     <link rel="icon" id="tripIcon" href="icon-192.png">
     <link rel="apple-touch-icon" id="tripAppleIcon" href="icon-192.png">
     <script>
         (function() {
             var TRIP_META = {
-                reunion: { title: 'Carte du Voyage - La Réunion & Île Maurice', theme: '#0e6b6f', icon: 'icon-192.png', manifest: 'manifest-reunion.json' },
-                blois:   { title: 'Carte du Voyage - Mariage à Blois',          theme: '#c8553d', icon: 'icon-192.png',   manifest: 'manifest-blois.json' }
+                reunion: { title: 'Carte du Voyage - La Réunion & Île Maurice', theme: '#fbfaf7', icon: 'icon-192.png', manifest: 'manifest-reunion.json' },
+                blois:   { title: 'Carte du Voyage - Mariage à Blois',          theme: '#fbfaf7', icon: 'icon-192.png',   manifest: 'manifest-blois.json' }
             };
             var trip = new URLSearchParams(location.search).get('trip');
             if (!trip || !/^[a-z0-9_-]+$/i.test(trip) || !TRIP_META[trip]) return;
@@ -49,12 +49,13 @@
 
 
     <button class="burger-btn" id="burgerBtn" title="Ouvrir le menu">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="15" y2="12"></line><line x1="3" y1="18" x2="19" y2="18"></line></svg>
+        <img src="icon-192.png" class="burger-mark" alt="">
         <span>Itinéraire</span>
     </button>
 
     <div class="sidebar" id="sidebar">
         <div class="sb-head">
+            <img src="icon-192.png" class="sb-mark" alt="">
             <div>
                 <div class="sb-eyebrow">Carnet de route · 2026</div>
                 <h3>Réunion &amp; Maurice</h3>
@@ -166,23 +167,20 @@
                     <div class="legend-sub">Étapes du séjour</div>
                     <div class="legend-dates" id="legendDates"></div>
                     <div class="legend-sub">Symboles</div>
-                    <div class="legend-key" data-need="acc"><img src="https://img.icons8.com/color/48/000000/home--v1.png" class="legend-icon"> <span>Gîtes / hébergements</span></div>
-                    <div class="legend-key" data-need="resto"><img src="https://img.icons8.com/color/48/000000/restaurant.png" class="legend-icon"> <span>Restaurants</span></div>
+                    <div class="legend-key" data-need="acc"><span class="legend-dot is-acc">N</span> <span>Nuit — gîtes &amp; hébergements</span></div>
+                    <div class="legend-key" data-need="resto"><span class="legend-dot is-resto">R</span> <span>Restaurants &amp; haltes</span></div>
                     <div class="legend-key" data-need="specialty">
-                        <span class="legend-icon legend-icon-slot"></span>
+                        <span class="legend-dot is-specialty">S</span>
                         <span>Spécialités locales</span>
                     </div>
                     <div class="legend-key" data-need="rando">
-                        <svg class="legend-icon" viewBox="0 0 64 64" width="18" height="18">
-                            <circle cx="32" cy="32" r="30" fill="#16a085"/>
-                            <path d="M10,44 L24,20 L31,32 L38,22 L54,44 Z" fill="#ffffff"/>
-                        </svg>
+                        <span class="legend-dot is-hiking">&#9650;</span>
                         <span>Points de randonnée (Visorando / Randopitons)</span>
                     </div>
-                    <div class="legend-key" data-need="foot"><span class="legend-dashed" style="border-color:#16a085;"></span> <span>Accessible uniquement à pied</span></div>
-                    <div class="legend-key" data-need="flight"><span class="legend-dashed" style="border-color:#3498db;"></span> <span>Accessible en avion</span></div>
-                    <div class="legend-key" data-need="optional"><span class="legend-dashed" style="border-color:#e67e22;"></span> <span>Visite optionnelle (selon temps/envie)</span></div>
-                    <div class="legend-key" data-need="tbd"><span class="legend-glyph">❓</span> <span>Activité à définir (lieu approximatif : voir la popup)</span></div>
+                    <div class="legend-key" data-need="foot"><span class="legend-dashed" style="border-color:#27655e;"></span> <span>Accessible uniquement à pied</span></div>
+                    <div class="legend-key" data-need="flight"><span class="legend-dashed" style="border-color:#445264;"></span> <span>Accessible en avion</span></div>
+                    <div class="legend-key" data-need="optional"><span class="legend-dashed" style="border-color:#b57a1e;"></span> <span>Visite optionnelle (selon temps/envie)</span></div>
+                    <div class="legend-key" data-need="tbd"><span class="legend-dot is-tbd">?</span> <span>Activité à définir (lieu approximatif : voir la popup)</span></div>
                 </div>
             </details>
         </div>
@@ -191,6 +189,17 @@
             <button class="print-btn" id="printBtn">Imprimer / exporter en PDF</button>
         </div>
     </div>
+
+    <!-- Fiche de lieu : remplit la place de l'ancienne bulle Leaflet. Position fixe
+         (bas-gauche en desktop, feuille glissante en mobile) pour ne jamais recouvrir
+         le marqueur sélectionné. Remplie par app.js à l'ouverture d'un marqueur. -->
+    <aside class="place-card" id="placeCard" aria-live="polite">
+        <div class="pc-head">
+            <span class="pc-head-spacer"></span>
+            <button class="pc-close" type="button" title="Fermer la fiche">&times;</button>
+        </div>
+        <div class="pc-body"></div>
+    </aside>
 
     <div id="map"></div>
 
