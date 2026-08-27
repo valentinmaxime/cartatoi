@@ -1,4 +1,5 @@
-var map = L.map('map', { zoomControl: false }).setView(TRIP_CONFIG.mapCenter, TRIP_CONFIG.mapZoom);
+
+        var map = L.map('map', { zoomControl: false }).setView(TRIP_CONFIG.mapCenter, TRIP_CONFIG.mapZoom);
         L.control.zoom({ position: 'topright' }).addTo(map);
 
         // Gamme des jours : mêmes teintes que les données d'origine mais sourdes et de
@@ -879,6 +880,50 @@ var map = L.map('map', { zoomControl: false }).setView(TRIP_CONFIG.mapCenter, TR
         burgerBtn.addEventListener('click', function() { setPanel(true); });
         closeBtn.addEventListener('click', function() { setPanel(false); });
 
+        // Glisser vers le bas pour fermer (mobile) : la poignée grise en haut du panneau le
+        // suggère visuellement, il fallait le geste réel derrière. enableSwipeToDismiss est
+        // générique, réutilisée aussi pour la fiche de lieu plus bas. scrollEl est le conteneur
+        // interne qui défile réellement (le panneau lui-même ne scrolle pas) : le geste ne
+        // s'engage que si ce conteneur est déjà tout en haut, sinon on laisse le défilement
+        // normal de la liste faire son travail.
+        function enableSwipeToDismiss(panelEl, scrollEl, onDismiss, isActiveFn) {
+            var startY = null, startX = null, currentY = 0, dragging = false;
+            var THRESHOLD = 90; // px avant de considérer que c'est un "fermer", pas juste un tap
+
+            panelEl.addEventListener('touchstart', function(e) {
+                if (!isActiveFn() || window.innerWidth > 560) return;
+                if (scrollEl && scrollEl.scrollTop > 2) return; // laisse le scroll interne agir
+                startY = e.touches[0].clientY;
+                startX = e.touches[0].clientX;
+                currentY = 0;
+                dragging = true;
+                panelEl.style.transition = 'none';
+            }, { passive: true });
+
+            panelEl.addEventListener('touchmove', function(e) {
+                if (!dragging || startY === null) return;
+                var dy = e.touches[0].clientY - startY;
+                var dx = e.touches[0].clientX - startX;
+                if (dy < 0) { dragging = false; panelEl.style.transition = ''; panelEl.style.transform = ''; return; } // vers le haut : on relâche, c'est un scroll
+                if (Math.abs(dx) > Math.abs(dy)) return; // geste plutôt horizontal : on laisse faire
+                currentY = dy;
+                panelEl.style.transform = 'translateY(' + dy + 'px)';
+            }, { passive: true });
+
+            function endDrag() {
+                if (!dragging) return;
+                dragging = false;
+                panelEl.style.transition = '';
+                panelEl.style.transform = '';
+                if (currentY > THRESHOLD) onDismiss();
+                startY = null; currentY = 0;
+            }
+            panelEl.addEventListener('touchend', endDrag);
+            panelEl.addEventListener('touchcancel', endDrag);
+        }
+
+        enableSwipeToDismiss(sidebar, sidebar.querySelector('.sb-scroll'), function() { setPanel(false); }, function() { return sidebar.classList.contains('open'); });
+
         var timelineList = document.getElementById('timelineList');
         var dayBadge = document.getElementById('dayBadge');
         var routeBadge = document.getElementById('routeBadge');
@@ -1633,6 +1678,7 @@ var map = L.map('map', { zoomControl: false }).setView(TRIP_CONFIG.mapCenter, TR
             });
             map.on('click', closeCard);
             map.on('popupclose', function() { if (!card.classList.contains('open')) deselect(); });
+            enableSwipeToDismiss(card, body, closeCard, function() { return card.classList.contains('open'); });
 
             map.on('popupopen', function(e) {
                 var src = e.popup._source;
