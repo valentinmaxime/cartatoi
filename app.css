@@ -505,8 +505,13 @@ body.panel-open .place-card { left: 364px; }
     border-bottom-color: var(--hair-soft);
     width: 34px; line-height: 34px; height: 34px;
     font-weight: 400;
+    display: flex; align-items: center; justify-content: center;
 }
-.leaflet-bar a:hover { background: var(--sand); }
+.leaflet-bar a svg { flex-shrink: 0; }
+/* Pas de changement de fond au survol/tap ici (contrairement aux autres boutons) : sur mobile,
+   :hover reste "collé" après un tap tant qu'on ne touche pas ailleurs, et comme les deux
+   moitiés +/- forment une seule pilule visuelle, un fond différent sur une seule moitié casse
+   la cohérence et donne l'impression que l'un des deux boutons "ressort" plus que l'autre. */
 /* Les boutons +/- de Leaflet grossissaient visuellement au tap (état actif/focus par défaut
    du navigateur jamais neutralisé) : on fixe explicitement transform à none sur tous les états
    et on remplace l'anneau de focus par défaut par un contour qui ne change pas la taille de
@@ -519,6 +524,7 @@ body.panel-open .place-card { left: 364px; }
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
     outline: none;
+    background: var(--paper) !important;
 }
 .leaflet-bar a:focus,
 .leaflet-bar a:focus-visible {
