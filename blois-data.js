@@ -123,11 +123,12 @@ var TRIP_CONFIG = {
                 weatherLinkUrl: "https://meteofrance.com/previsions-meteo-france/vernet/31810",
                 date: "2026-08-31",
                 theme: "Départ",
-                title: "Château Royal de Blois (optionnel, 10h) • Route retour Blois ➔ Vernet (11h - 18h30)",
+                title: "Airbnb ➔ Château Royal de Blois (optionnel, 10h) ➔ Route retour Blois ➔ Vernet (11h - 18h30)",
                 center: [45.7, 1.4],
                 zoom: 7,
                 color: "#16a085",
                 points: [
+                    { name: AIRBNB_STLOUIS.name, time: "09h00", lat: AIRBNB_STLOUIS.lat, lng: AIRBNB_STLOUIS.lng, icon: 'house' },
                     { name: CHATEAU_ROYAL_BLOIS.name, time: "10h00", lat: CHATEAU_ROYAL_BLOIS.lat, lng: CHATEAU_ROYAL_BLOIS.lng, icon: 'green', infoLink: INFO_CHATEAU_ROYAL, optional: true },
                     { name: VERNET.name + " (Retour)", time: "11h00 - 18h30", lat: VERNET.lat, lng: VERNET.lng, icon: 'green' }
                 ]
@@ -137,3 +138,5 @@ var TRIP_CONFIG = {
         // Pas de spécialité locale dédiée pour ce voyage — tableau vide conservé pour que le
         // reste du code (recherche, légende auto-masquée) continue de fonctionner sans changement.
         var specialtyPoints = [];
+
+        
