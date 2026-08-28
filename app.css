@@ -500,15 +500,23 @@ body.panel-open .place-card { left: 364px; }
     box-shadow: var(--shadow-float) !important;
     overflow: hidden;
 }
-.leaflet-bar a, .leaflet-bar a:hover {
+/* !important + ciblage explicite de .leaflet-touch : Leaflet ajoute cette classe sur les
+   appareils tactiles et applique alors SES PROPRES règles de taille par défaut (différentes
+   des nôtres), plus spécifiques que ".leaflet-bar a" seul. Sans ça, les deux jeux de règles se
+   disputaient selon l'état (repos vs tap), donnant des tailles différentes uniquement sur
+   mobile — jamais sur desktop, où .leaflet-touch n'existe pas. */
+.leaflet-bar a,
+.leaflet-bar a:hover,
+.leaflet-touch .leaflet-bar a,
+.leaflet-touch .leaflet-bar a:hover {
     background: var(--paper); color: var(--ink);
     border-bottom-color: var(--hair-soft);
-    width: 44px; line-height: 44px; height: 44px;
+    width: 44px !important; line-height: 44px !important; height: 44px !important;
     font-weight: 400;
     display: flex; align-items: center; justify-content: center;
 }
 .leaflet-bar a svg { flex-shrink: 0; }
-.leaflet-bar a:hover { background: var(--sand); }
+.leaflet-bar a:hover, .leaflet-touch .leaflet-bar a:hover { background: var(--sand); }
 /* Les boutons +/- de Leaflet grossissaient visuellement au tap (état actif/focus par défaut
    du navigateur jamais neutralisé) : on fixe explicitement transform à none sur tous les états
    et on remplace l'anneau de focus par défaut par un contour qui ne change pas la taille de
@@ -516,14 +524,20 @@ body.panel-open .place-card { left: 364px; }
 .leaflet-bar a,
 .leaflet-bar a:active,
 .leaflet-bar a:focus,
-.leaflet-bar a:hover {
+.leaflet-bar a:hover,
+.leaflet-touch .leaflet-bar a,
+.leaflet-touch .leaflet-bar a:active,
+.leaflet-touch .leaflet-bar a:focus,
+.leaflet-touch .leaflet-bar a:hover {
     transform: none !important;
-    box-sizing: border-box;
+    box-sizing: border-box !important;
     -webkit-tap-highlight-color: transparent;
     outline: none;
 }
 .leaflet-bar a:focus,
-.leaflet-bar a:focus-visible {
+.leaflet-bar a:focus-visible,
+.leaflet-touch .leaflet-bar a:focus,
+.leaflet-touch .leaflet-bar a:focus-visible {
     outline: 2px solid var(--green); outline-offset: -2px;
 }
 /* Boutons carte maison : fond de carte + géolocalisation */
