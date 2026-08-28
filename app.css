@@ -506,6 +506,21 @@ body.panel-open .place-card { left: 364px; }
     font-weight: 400;
 }
 .leaflet-bar a:hover { background: var(--sand); }
+/* Les boutons +/- de Leaflet grossissaient visuellement au tap (état actif/focus par défaut
+   du navigateur jamais neutralisé) : on fixe explicitement transform à none sur tous les états
+   et on remplace l'anneau de focus par défaut par un contour qui ne change pas la taille de
+   la boîte (outline, pas border/padding). */
+.leaflet-bar a,
+.leaflet-bar a:active,
+.leaflet-bar a:focus,
+.leaflet-bar a:hover {
+    transform: none !important;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+.leaflet-bar a:focus-visible {
+    outline: 2px solid var(--green); outline-offset: -2px;
+}
 /* Boutons carte maison : fond de carte + géolocalisation */
 .map-btn {
     -webkit-appearance: none; appearance: none;
