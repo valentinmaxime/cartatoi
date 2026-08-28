@@ -102,7 +102,7 @@ var TRIP_CONFIG = {
                 weatherLinkUrl: "https://meteofrance.com/previsions-meteo-france/blois/41000",
                 date: "2026-08-30",
                 theme: "Loire Valley & suite des festivités",
-                title: "Fin de soirée au château (bus retour 3h) • Petit-déjeuner • Visite d'un château au choix (Chambord ou Cheverny) • Installation Airbnb (16h) • The Petit Pub (15h) • Dîner (lieu à définir, optionnel)",
+                title: "Fin de soirée au château (bus retour 3h) • Petit-déjeuner • Visite d'un château au choix (Chambord ou Cheverny) • Installation Airbnb (16h) • The Petit Pub (15h) • Dîner (lieu à définir, optionnel) • Retour Airbnb",
                 center: [47.55, 1.4],
                 zoom: 11,
                 color: "#9b59b6",
@@ -112,7 +112,8 @@ var TRIP_CONFIG = {
                     { name: CHATEAU_CHAMBORD.name, time: "11h00 - 16h00", lat: CHATEAU_CHAMBORD.lat, lng: CHATEAU_CHAMBORD.lng, icon: 'violet', infoLink: INFO_CHAMBORD, excludeFromRoute: true, optional: true },
                     { name: CHATEAU_CHEVERNY.name, time: "11h00 - 16h00", lat: CHATEAU_CHEVERNY.lat, lng: CHATEAU_CHEVERNY.lng, icon: 'violet', infoLink: INFO_CHEVERNY, excludeFromRoute: true, optional: true },
                     { name: "The Petit Pub", time: "15h00", lat: 47.5864567, lng: 1.3337, icon: 'violet', note: "Pour prolonger les festivités du week-end. 6 Rue Saint-Martin, Blois." },
-                    { name: AIRBNB_STLOUIS.name, time: "16h00", lat: AIRBNB_STLOUIS.lat, lng: AIRBNB_STLOUIS.lng, icon: 'house' }
+                    { name: AIRBNB_STLOUIS.name, time: "16h00", lat: AIRBNB_STLOUIS.lat, lng: AIRBNB_STLOUIS.lng, icon: 'house' },
+                    { name: AIRBNB_STLOUIS.name, time: "22h00", lat: AIRBNB_STLOUIS.lat, lng: AIRBNB_STLOUIS.lng, icon: 'house' }
                 ],
                 extras: [
                     { time: "20h00", name: "Dîner (lieu à définir, optionnel)" }
