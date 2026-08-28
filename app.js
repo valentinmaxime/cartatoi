@@ -932,9 +932,13 @@
         // Clic sur la météo → source météo externe. Priorité à l'URL propre au jour sélectionné
         // (data.weatherLinkUrl, ex. AccuWeather pour un jour à Maurice) si elle existe, sinon
         // repli sur le lien générique du voyage (TRIP_CONFIG.weatherLinkUrl, ex. Météo France).
+        // Vrai attribut href (pas de window.open() en JS) : un tap sur un vrai lien déclenche
+        // correctement la détection d'app installée (App Links) sur Android/iOS, un window.open()
+        // scripté beaucoup moins fiablement.
         var currentMeteoUrl = TRIP_CONFIG.weatherLinkUrl || null;
-        weatherBadge.addEventListener('click', function() {
-            if (currentMeteoUrl) window.open(currentMeteoUrl, '_blank', 'noopener');
+        weatherBadge.href = currentMeteoUrl || '#';
+        weatherBadge.addEventListener('click', function(e) {
+            if (!currentMeteoUrl) e.preventDefault();
         });
         var sunBadge = document.getElementById('sunBadge');
         var timeSlider = document.getElementById('timeSlider');
@@ -1050,7 +1054,7 @@
             // Maurice), repli sur le lien générique du voyage (ex. Météo France).
             currentMeteoUrl = data.weatherLinkUrl || TRIP_CONFIG.weatherLinkUrl || null;
             var currentMeteoLabel = data.weatherLinkLabel || TRIP_CONFIG.weatherLinkLabel || 'Voir la météo en détail';
-            weatherBadge.style.cursor = currentMeteoUrl ? 'pointer' : '';
+            weatherBadge.href = currentMeteoUrl || '#';
             weatherBadge.title = currentMeteoUrl ? currentMeteoLabel : '';
 
             var items = timelineList.querySelectorAll('.timeline-item');
