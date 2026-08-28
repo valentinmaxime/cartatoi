@@ -30,6 +30,7 @@ body {
     background: #e8e6e0;
     color: var(--ink);
     overflow: hidden;
+    touch-action: manipulation;
     -webkit-font-smoothing: antialiased;
     text-wrap: pretty;
 }
@@ -517,7 +518,9 @@ body.panel-open .place-card { left: 364px; }
     transform: none !important;
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
+    outline: none;
 }
+.leaflet-bar a:focus,
 .leaflet-bar a:focus-visible {
     outline: 2px solid var(--green); outline-offset: -2px;
 }
@@ -535,7 +538,9 @@ body.panel-open .place-card { left: 364px; }
 .map-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
 .map-btn:hover { background: var(--white); color: var(--ink); border-color: var(--ink-2); }
 .map-btn:active { transform: scale(.94); }
-.map-btn:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+.map-btn:focus { outline: none; }
+.map-btn:focus,
+.map-btn:focus-visible { outline: 2px solid var(--green); outline-offset: -2px; }
 
 .layers-ctl { position: relative; }
 .layers-ctl.is-open .map-btn { background: var(--ink); color: var(--paper); border-color: var(--ink); }
