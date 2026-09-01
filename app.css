@@ -860,3 +860,139 @@ body.panel-open .place-card { left: 364px; }
     transition: transform .15s ease, opacity .15s ease;
 }
 .picker-card:hover .picker-card-go { transform: translateX(3px); opacity: 1; }
+
+
+/* ============================================================================
+   Barre terrain — la seule surface visible en permanence pendant le voyage.
+   Ligne 1 : le jour en cours + météo + trajet (tap : ouvre le programme).
+   Ligne 2 : les étapes du jour, une par une, avec l'itinéraire en un tap.
+   ============================================================================ */
+.field-bar {
+    position: fixed; z-index: 1003;
+    left: 50%; transform: translateX(-50%);
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    width: min(520px, calc(100vw - 20px));
+    display: flex; flex-direction: column;
+    background: var(--paper);
+    border: 1px solid var(--hair); border-radius: 18px;
+    box-shadow: 0 26px 55px -30px rgba(15,35,32,.6), 0 1px 2px rgba(15,35,32,.06);
+    overflow: hidden;
+    transition: transform .38s cubic-bezier(.22,.75,.2,1), width .38s cubic-bezier(.22,.75,.2,1), opacity .2s ease;
+}
+/* transform plutôt que margin-left : cohérent avec .sidebar et .place-card, qui décalent déjà
+   via transform (accéléré, plus fluide qu'une propriété qui redéclenche la mise en page). */
+body.panel-open .field-bar { transform: translateX(calc(-50% + 196px)); width: min(520px, calc(100vw - 420px)); }
+
+/* Poignée de repli : une fine bande en haut de la barre, tap pour cacher/montrer la ligne
+   d'étapes (fb-actions). Le résumé du jour (fb-day) reste toujours visible. */
+.fb-collapse {
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; height: 18px; padding: 0;
+    background: none; border: 0; cursor: pointer;
+    color: var(--muted);
+}
+.fb-collapse:hover { background: var(--sand); }
+.fb-collapse-chev { flex-shrink: 0; transition: transform .25s ease; }
+.field-bar.collapsed .fb-collapse-chev { transform: rotate(180deg); }
+.fb-actions {
+    overflow: hidden;
+}
+.field-bar.collapsed .fb-actions {
+    display: none;
+}
+
+.fb-day {
+    display: flex; align-items: center; gap: 11px;
+    width: 100%; padding: 10px 12px;
+    background: var(--white); border: 0; border-bottom: 1px solid var(--hair-soft);
+    font-family: var(--font-sans); text-align: left; cursor: pointer;
+    transition: background .15s;
+}
+.fb-day:hover { background: var(--sand); }
+.fb-pill {
+    flex-shrink: 0; min-width: 42px; height: 42px; padding: 0 8px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 11px; background: var(--fb-color, var(--ink)); color: #fff;
+    font-family: var(--font-mono); font-size: 15px; font-weight: 500;
+}
+.fb-day-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.fb-title {
+    font-size: 15px; font-weight: 600; letter-spacing: -.015em; color: var(--ink);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.fb-meta {
+    display: flex; align-items: center; gap: 6px;
+    font-family: var(--font-mono); font-size: 12px; color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.fb-sep { width: 3px; height: 3px; border-radius: 50%; background: rgba(20,32,30,.3); flex-shrink: 0; }
+.fb-today {
+    flex-shrink: 0; height: 34px; padding: 0 11px;
+    display: none; align-items: center;
+    background: var(--white); color: var(--ocre);
+    border: 1.5px solid rgba(181,122,30,.45); border-radius: 9px;
+    font-family: var(--font-sans); font-size: 12.5px; font-weight: 600; cursor: pointer;
+}
+.fb-today.visible { display: flex; }
+.fb-chev { flex-shrink: 0; color: var(--muted); }
+
+.fb-actions { display: flex; align-items: stretch; gap: 8px; padding: 9px; }
+.fb-arrow {
+    flex-shrink: 0; width: 46px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--white); color: var(--ink);
+    border: 1px solid var(--hair); border-radius: 12px; cursor: pointer;
+    transition: background .15s;
+}
+.fb-arrow:hover:not(:disabled) { background: var(--sand); }
+.fb-arrow:disabled { opacity: .3; cursor: default; }
+.fb-arrow svg { width: 20px; height: 20px; }
+
+.fb-go {
+    flex: 1; min-width: 0;
+    display: flex; align-items: center; gap: 10px;
+    height: 52px; padding: 0 14px;
+    background: var(--green); color: var(--paper) !important;
+    border: 0; border-radius: 12px; text-decoration: none;
+    font-family: var(--font-sans); transition: background .15s;
+}
+.fb-go:hover { background: var(--green-dark); }
+.fb-go > svg { flex-shrink: 0; width: 20px; height: 20px; }
+.fb-go-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.fb-go-k {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 500;
+    letter-spacing: .13em; text-transform: uppercase; color: rgba(251,250,247,.8);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.fb-go-v {
+    font-size: 14.5px; font-weight: 600; letter-spacing: -.01em; color: var(--paper);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.fb-go.is-empty { background: var(--white); border: 1px solid var(--hair); pointer-events: none; }
+.fb-go.is-empty .fb-go-k { color: var(--muted); }
+.fb-go.is-empty .fb-go-v, .fb-go.is-empty > svg { color: var(--ink) !important; }
+
+/* Les contrôles de carte remontent au-dessus de la barre, mais seulement sur mobile (voir
+   media query plus bas) : sur desktop la barre est centrée et étroite, elle n'atteint jamais
+   le coin bas-droit (mini-carte) ni la pile de gauche (échelle), donc rien n'a besoin de
+   remonter là — les décaler quand même créait un espace vide inutile sous la mini-carte. */
+.locate-toast { bottom: calc(var(--fb-h, 135px) + 32px); }
+
+/* La barre s'efface quand la fiche de lieu la recouvre */
+body:has(.place-card.open) .field-bar { opacity: 0; pointer-events: none; }
+
+@media (max-width: 560px) {
+    .field-bar { width: calc(100vw - 12px); bottom: calc(6px + env(safe-area-inset-bottom, 0px)); }
+    .leaflet-bottom { bottom: calc(var(--fb-h, 135px) + 10px); }
+    body.panel-open .field-bar { margin-left: 0; opacity: 0; pointer-events: none; }
+    .fb-arrow { width: 50px; }
+    .fb-go { height: 54px; }
+}
+
+/* Téléphone en support voiture : écran court en paysage */
+@media (max-height: 480px) and (orientation: landscape) {
+    .fb-day { padding: 7px 12px; }
+    .fb-pill { height: 36px; min-width: 36px; }
+    .fb-go, .fb-arrow { height: 46px; }
+}

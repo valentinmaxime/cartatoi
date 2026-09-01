@@ -1,6 +1,12 @@
-
-        var map = L.map('map', { zoomControl: false }).setView(TRIP_CONFIG.mapCenter, TRIP_CONFIG.mapZoom);
-        L.control.zoom({ position: 'topright' }).addTo(map);
+var map = L.map('map', { zoomControl: false }).setView(TRIP_CONFIG.mapCenter, TRIP_CONFIG.mapZoom);
+        L.control.zoom({
+            position: 'topright',
+            // Les glyphes texte "+"/"−" par défaut de Leaflet ont un poids visuel très inégal
+            // (le "+" est une croix pleine, le "−" un simple trait fin) : remplacés par de
+            // vraies icônes SVG à trait cohérent, assorties au reste des boutons de la carte.
+            zoomInText: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>',
+            zoomOutText: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>'
+        }).addTo(map);
 
         // Gamme des jours : mêmes teintes que les données d'origine mais sourdes et de
         // clarté homogène, pour rester distinctes sans saturer la carte. Appliquée ici,
@@ -875,7 +881,7 @@
             });
             return panelSettled;
         }
-        setPanel(window.innerWidth > 900);
+        setPanel(false);
 
         burgerBtn.addEventListener('click', function() { setPanel(true); });
         closeBtn.addEventListener('click', function() { setPanel(false); });
@@ -1046,6 +1052,7 @@
             var dparts = data.day.split(' - ');
             dayBadge.innerHTML = `<span class="db-main">${dparts[0]}<em>${dparts[1] || ''}</em></span><span class="db-theme">${data.theme}</span>`;
             updateNavButtons(index);
+            paintFieldDay(index, data);
             routeBadge.innerHTML = `<span class="rb-load">Calcul du trajet…</span>`;
             weatherBadge.innerHTML = `<span class="wl">chargement…</span>`;
             sunBadge.innerHTML = `<span class="wl">chargement…</span>`;
@@ -1146,8 +1153,10 @@
                 if (w) {
                     var icon = WEATHER_ICONS[w.weathercode] || "🌡️";
                     weatherBadge.innerHTML = `<span class="wv">${icon} ${w.tempMin.toFixed(0)}–${w.tempMax.toFixed(0)}°C</span><span class="wl">${w.label}</span>`;
+                    paintFieldWeather(`${icon} ${w.tempMin.toFixed(0)}–${w.tempMax.toFixed(0)}°`);
                 } else {
                     weatherBadge.innerHTML = `<span class="wl">météo indisponible</span>`;
+                    paintFieldWeather('');
                 }
             });
 
@@ -1196,12 +1205,15 @@
                 var longAlert = durationMinutes >= 120
                     ? `<div class="rb-alert">⚠ Plus de 2 h de route : prévoir des pauses et partir tôt</div>` : '';
                 routeBadge.innerHTML = `<div class="rb-main"><b>${km} km</b><span class="rb-dot"></span><b>~${timeStr}</b> de conduite${segmentNote}</div>${footNote}${flightNote}${longAlert}`;
+                paintFieldRoute(`${km} km · ~${timeStr}`);
             } else if (footPoints.length > 0 || flightPoints.length > 0) {
                 var footNote2 = footPoints.length > 0 ? `🥾 Accessible uniquement à pied. ` : '';
                 var flightNote2 = flightPoints.length > 0 ? `✈️ Trajet en avion. ` : '';
                 routeBadge.innerHTML = `<div class="rb-main">${footNote2}${flightNote2}</div>`;
+                paintFieldRoute(footPoints.length > 0 ? '🥾 à pied' : '✈️ en avion');
             } else {
                 routeBadge.innerHTML = `<div class="rb-main">Journée sur place · détente</div>`;
+                paintFieldRoute('sur place');
             }
 
             if (data.points.length > 0 && !opts.skipPopup) {
@@ -1696,5 +1708,155 @@
                 map.closePopup(e.popup);
                 body.innerHTML = content;
                 card.classList.add('open');
+            });
+        })();
+
+
+        // ====================================================================
+        // BARRE TERRAIN
+        // Ligne 1 : le jour affiché, sa météo et son trajet — les infos qu'on
+        // allait chercher dans le panneau. Ligne 2 : les étapes du jour, une
+        // par une (flèches), avec l'itinéraire vers l'étape affichée.
+        // À l'ouverture d'un jour on se cale sur l'étape en cours : la première
+        // encore à venir d'après l'heure du téléphone si c'est le jour réel du
+        // voyage, sinon la première étape du jour.
+        // ====================================================================
+        var fbState = { day: 0, step: 0, steps: [], weather: '', route: '' };
+
+        function fbEl(id) { return document.getElementById(id); }
+        function fbCleanName(name) { return (name || '').replace(/\s*\([^)]*\)/g, '').trim(); }
+
+        function fbTodayIndex() {
+            var todayStr = new Date().toISOString().substring(0, 10);
+            return timelineData.findIndex(function(d) { return d.date === todayStr; });
+        }
+
+        function fbCurrentStepIndex(data) {
+            var pts = data.points || [];
+            var todayStr = new Date().toISOString().substring(0, 10);
+            if (data.date !== todayStr) return 0;
+            var now = new Date();
+            var mins = now.getHours() * 60 + now.getMinutes();
+            for (var i = 0; i < pts.length; i++) {
+                var k = timeSortKey(pts[i].time);
+                if (k !== 9999 && k >= mins) return i;
+            }
+            return Math.max(0, pts.length - 1);
+        }
+
+        // Météo et trajet arrivent de façon asynchrone : on les mémorise chacune de
+        // leur côté et on repeint la ligne, plutôt que l'une écrase l'autre.
+        function fbPaintMeta() {
+            var el = fbEl('fbMeta');
+            if (!el) return;
+            var bits = [];
+            if (fbState.weather) bits.push(fbState.weather);
+            if (fbState.route) bits.push(fbState.route);
+            var d = timelineData[fbState.day];
+            if (!bits.length && d) bits.push(d.theme || d.day.split(' - ')[1] || '');
+            el.innerHTML = bits.map(function(b, i) {
+                return (i ? '<span class="fb-sep"></span>' : '') + '<span>' + b + '</span>';
+            }).join('');
+        }
+        function paintFieldWeather(txt) { fbState.weather = txt || ''; fbPaintMeta(); }
+        function paintFieldRoute(txt) { fbState.route = txt || ''; fbPaintMeta(); }
+
+        function paintFieldStep() {
+            var pts = fbState.steps;
+            var go = fbEl('fbGo');
+            fbEl('fbPrev').disabled = fbState.step <= 0;
+            fbEl('fbNext').disabled = fbState.step >= pts.length - 1;
+            if (!pts.length) {
+                go.classList.add('is-empty');
+                go.removeAttribute('href');
+                fbEl('fbGoK').textContent = 'Aucune étape localisée';
+                fbEl('fbGoV').textContent = timelineData[fbState.day].theme || '—';
+                return;
+            }
+            var pt = pts[fbState.step];
+            var name = fbCleanName(pt.name) || pt.name;
+            go.classList.remove('is-empty');
+            var region = TRIP_CONFIG.googleMapsRegion(pt.lat, pt.lng);
+            go.href = name
+                ? 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(name + ', ' + region)
+                : 'https://www.google.com/maps/search/?api=1&query=' + pt.lat + ',' + pt.lng;
+            go.title = 'Itinéraire vers ' + name;
+            fbEl('fbGoK').textContent = 'Étape ' + (fbState.step + 1) + '/' + pts.length +
+                (pt.time ? ' · ' + pt.time : '');
+            fbEl('fbGoV').textContent = name;
+        }
+
+        function paintFieldDay(index, data) {
+            var bar = fbEl('fieldBar');
+            if (!bar || !data) return;
+            fbState.day = index;
+            fbState.steps = (data.points || []).filter(function(p) { return p.lat && p.lng; });
+            fbState.step = Math.min(fbCurrentStepIndex(data), Math.max(0, fbState.steps.length - 1));
+            fbState.weather = ''; fbState.route = '';
+            bar.style.setProperty('--fb-color', data.color);
+            fbEl('fbPill').textContent = data.day.split(' - ')[0];
+            fbEl('fbTitle').textContent = data.title;
+            var t = fbTodayIndex();
+            fbEl('fbToday').classList.toggle('visible', t >= 0 && t !== index);
+            fbPaintMeta();
+            paintFieldStep();
+        }
+
+        (function initFieldBar() {
+            if (!document.getElementById('fieldBar')) return;
+            // Les flèches déplacent la carte sur l'étape : on suit le fil de la journée
+            // sans avoir à chercher le bon point du doigt.
+            function stepTo(delta) {
+                var n = fbState.step + delta;
+                if (n < 0 || n >= fbState.steps.length) return;
+                fbState.step = n;
+                paintFieldStep();
+                var pt = fbState.steps[n];
+                map.setView([pt.lat, pt.lng], Math.max(map.getZoom(), 12), { animate: true });
+            }
+            fbEl('fbPrev').addEventListener('click', function() { stepTo(-1); });
+            fbEl('fbNext').addEventListener('click', function() { stepTo(1); });
+            fbEl('fbDay').addEventListener('click', function() { setPanel(true); });
+            var todayBtn = fbEl('fbToday');
+            function goToday(e) {
+                if (e) e.stopPropagation();
+                var t = fbTodayIndex();
+                if (t >= 0) selectDay(t, { skipPopup: true });
+            }
+            todayBtn.addEventListener('click', goToday);
+            todayBtn.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goToday(e); }
+            });
+            var idx = parseInt(timeSlider.value) || 0;
+            paintFieldDay(idx, timelineData[idx]);
+
+            // Hauteur réelle de la barre → --fb-h, pour que l'attribution et les
+            // contrôles Leaflet dégagent la bonne place quelle que soit la variante.
+            var bar = document.getElementById('fieldBar');
+            function syncBarHeight() {
+                document.documentElement.style.setProperty('--fb-h', bar.offsetHeight + 'px');
+            }
+            syncBarHeight();
+            if (window.ResizeObserver) new ResizeObserver(syncBarHeight).observe(bar);
+            window.addEventListener('resize', syncBarHeight);
+
+            // Repli de la barre (juste la ligne d'étapes, le résumé du jour reste visible) :
+            // choix mémorisé pour les prochaines visites.
+            var collapseBtn = fbEl('fbCollapse');
+            var COLLAPSE_KEY = 'fieldBarCollapsed';
+            function setCollapsed(collapsed) {
+                bar.classList.toggle('collapsed', collapsed);
+                collapseBtn.setAttribute('aria-expanded', String(!collapsed));
+                collapseBtn.title = collapsed ? 'Déplier la barre' : 'Replier la barre';
+                try { localStorage.setItem(COLLAPSE_KEY, collapsed ? '1' : '0'); } catch (e) {}
+                // La hauteur de la barre change (la ligne d'étapes apparaît/disparaît) : les
+                // contrôles Leaflet qui se calent dessus (--fb-h) doivent être resynchronisés.
+                syncBarHeight();
+            }
+            var savedCollapsed = false;
+            try { savedCollapsed = localStorage.getItem(COLLAPSE_KEY) === '1'; } catch (e) {}
+            if (savedCollapsed) setCollapsed(true);
+            collapseBtn.addEventListener('click', function() {
+                setCollapsed(!bar.classList.contains('collapsed'));
             });
         })();
