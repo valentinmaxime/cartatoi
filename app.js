@@ -901,7 +901,7 @@ var map = L.map('map', { zoomControl: false }).setView(TRIP_CONFIG.mapCenter, TR
             var baseTransform = getBaseTransform || function() { return ''; };
 
             panelEl.addEventListener('touchstart', function(e) {
-                if (!isActiveFn() || window.innerWidth > 560) return;
+                if (!isActiveFn() || !isMobileViewport()) return;
                 if (scrollEl && scrollEl.scrollTop > 2) return; // laisse le scroll interne agir
                 startY = e.touches[0].clientY;
                 startX = e.touches[0].clientX;
@@ -971,6 +971,14 @@ var map = L.map('map', { zoomControl: false }).setView(TRIP_CONFIG.mapCenter, TR
         // Jeton de requête pour éviter que des réponses tardives n'écrasent l'affichage du jour courant
         // ---------- Outils partagés (distances, index de lieux, réservations, plan B) ----------
         function ptKey(p) { return p.lat.toFixed(4) + '_' + p.lng.toFixed(4); }
+
+        // Détection "mobile" basée sur la plus petite dimension de l'écran (largeur OU
+        // hauteur), pas juste la largeur : un téléphone en paysage a une largeur qui dépasse
+        // largement 560px, mais sa hauteur (la dimension qui reste "petite") le trahit toujours.
+        // Utilisée partout où l'app doit reconnaître un téléphone quelle que soit l'orientation
+        // (barre terrain, fiche de lieu, gestes de glissement) — important pour l'usage prévu
+        // "téléphone en support voiture", presque toujours en paysage.
+        function isMobileViewport() { return Math.min(window.innerWidth, window.innerHeight) <= 560; }
 
         function deaccent(s) {
             return (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -1682,7 +1690,7 @@ var map = L.map('map', { zoomControl: false }).setView(TRIP_CONFIG.mapCenter, TR
             var body = card.querySelector('.pc-body');
             var closeBtn = card.querySelector('.pc-close');
             var selected = null;
-            var isMobile = function() { return window.matchMedia('(max-width: 560px)').matches; };
+            var isMobile = isMobileViewport;
 
             function deselect() {
                 if (selected && selected._icon) selected._icon.classList.remove('is-selected');
@@ -1874,7 +1882,7 @@ var map = L.map('map', { zoomControl: false }).setView(TRIP_CONFIG.mapCenter, TR
                     return document.body.classList.contains('panel-open') ? 'translateX(calc(-50% + 196px))' : 'translateX(-50%)';
                 }
                 bar.addEventListener('touchstart', function(e) {
-                    if (window.innerWidth > 560) return;
+                    if (!isMobileViewport()) return;
                     startY = e.touches[0].clientY;
                     startX = e.touches[0].clientX;
                     dy = 0;

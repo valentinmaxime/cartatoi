@@ -721,7 +721,7 @@ body.panel-open .place-card { left: 364px; }
     background: var(--paper);
 }
 .mini-map-ctl .leaflet-container { width: 100%; height: 100%; background: #dfe4e3; }
-@media (max-width: 560px) { .mini-map-ctl { display: none; } }
+@media (max-width: 560px), (max-height: 560px) { .mini-map-ctl { display: none; } }
 
 /* ---------- Impression ---------- */
 #printView { display: none; }
@@ -761,7 +761,7 @@ body.panel-open .place-card { left: 364px; }
    Mobile : le panneau et la fiche deviennent des feuilles glissantes ;
    la carte reste visible en permanence.
    ============================================================================ */
-@media (max-width: 560px) {
+@media (max-width: 560px), (max-height: 560px) {
     .burger-btn { top: 10px; left: 10px; height: 42px; }
 
     .sidebar {
@@ -987,9 +987,11 @@ body.panel-open .field-bar { transform: translateX(calc(-50% + 196px)); width: m
 /* La barre s'efface quand la fiche de lieu la recouvre */
 body:has(.place-card.open) .field-bar { opacity: 0; pointer-events: none; }
 
-@media (max-width: 560px) {
+@media (max-width: 560px), (max-height: 560px) {
     .field-bar { width: calc(100vw - 12px); bottom: calc(6px + env(safe-area-inset-bottom, 0px)); }
-    .leaflet-bottom { bottom: calc(var(--fb-h, 135px) + 10px); }
+    /* Pas de décalage du crédit Leaflet/OSM ici (contrairement à avant) : la barre, presque
+       pleine largeur sur mobile, le recouvre déjà naturellement — il reste "derrière" plutôt
+       que d'être poussé dans un espace visible juste au-dessus. */
     body.panel-open .field-bar { margin-left: 0; opacity: 0; pointer-events: none; }
     .fb-arrow { width: 50px; }
     .fb-go { height: 54px; }
