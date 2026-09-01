@@ -894,6 +894,11 @@ body.panel-open .field-bar { transform: translateX(calc(-50% + 196px)); width: m
 .fb-collapse:hover { background: var(--sand); }
 .fb-collapse-chev { flex-shrink: 0; transition: transform .25s ease; }
 .field-bar.collapsed .fb-collapse-chev { transform: rotate(180deg); }
+
+/* Repère de préhension mobile : indique que la barre se glisse, à la place du chevron (tap,
+   desktop) qui n'a pas de sens sur tactile. Décoratif, le geste s'applique à toute la barre. */
+.fb-grip { display: none; align-items: center; justify-content: center; width: 100%; height: 16px; }
+.fb-grip span { width: 32px; height: 4px; border-radius: 99px; background: rgba(20,32,30,.16); }
 .fb-actions {
     overflow: hidden;
 }
@@ -988,6 +993,11 @@ body:has(.place-card.open) .field-bar { opacity: 0; pointer-events: none; }
     body.panel-open .field-bar { margin-left: 0; opacity: 0; pointer-events: none; }
     .fb-arrow { width: 50px; }
     .fb-go { height: 54px; }
+    /* Le chevron ne sert qu'au tap (desktop, pas de tactile) : sur mobile le glissement
+       bidirectionnel (bas = replier, haut = déplier) couvre déjà les deux sens — le grip
+       remplace visuellement le chevron pour indiquer que la barre se glisse. */
+    .fb-collapse { display: none; }
+    .fb-grip { display: flex; }
 }
 
 /* Téléphone en support voiture : écran court en paysage */

@@ -892,9 +892,13 @@ var map = L.map('map', { zoomControl: false }).setView(TRIP_CONFIG.mapCenter, TR
         // interne qui défile réellement (le panneau lui-même ne scrolle pas) : le geste ne
         // s'engage que si ce conteneur est déjà tout en haut, sinon on laisse le défilement
         // normal de la liste faire son travail.
-        function enableSwipeToDismiss(panelEl, scrollEl, onDismiss, isActiveFn) {
+        function enableSwipeToDismiss(panelEl, scrollEl, onDismiss, isActiveFn, getBaseTransform) {
             var startY = null, startX = null, currentY = 0, dragging = false;
             var THRESHOLD = 90; // px avant de considérer que c'est un "fermer", pas juste un tap
+            // getBaseTransform (optionnel) : certains panneaux (barre terrain) ont déjà un
+            // transform CSS de base (translateX de centrage) — sans le préserver pendant le
+            // geste, l'écraser avec le seul translateY() du glissement le ferait sauter de côté.
+            var baseTransform = getBaseTransform || function() { return ''; };
 
             panelEl.addEventListener('touchstart', function(e) {
                 if (!isActiveFn() || window.innerWidth > 560) return;
@@ -913,7 +917,7 @@ var map = L.map('map', { zoomControl: false }).setView(TRIP_CONFIG.mapCenter, TR
                 if (dy < 0) { dragging = false; panelEl.style.transition = ''; panelEl.style.transform = ''; return; } // vers le haut : on relâche, c'est un scroll
                 if (Math.abs(dx) > Math.abs(dy)) return; // geste plutôt horizontal : on laisse faire
                 currentY = dy;
-                panelEl.style.transform = 'translateY(' + dy + 'px)';
+                panelEl.style.transform = (baseTransform() + ' translateY(' + dy + 'px)').trim();
             }, { passive: true });
 
             function endDrag() {
@@ -1859,4 +1863,49 @@ var map = L.map('map', { zoomControl: false }).setView(TRIP_CONFIG.mapCenter, TR
             collapseBtn.addEventListener('click', function() {
                 setCollapsed(!bar.classList.contains('collapsed'));
             });
+
+            // Glisser la barre terrain replie/déplie selon le sens (bas = replier, haut =
+            // déplier) : contrairement au panneau et à la fiche de lieu qui ne gèrent qu'un
+            // sens (fermeture), la barre reste toujours présente à l'écran donc les deux sens
+            // ont un rôle — logique dédiée plutôt que complexifier enableSwipeToDismiss.
+            (function() {
+                var startY = null, startX = null, dragging = false, dy = 0;
+                function baseTransform() {
+                    return document.body.classList.contains('panel-open') ? 'translateX(calc(-50% + 196px))' : 'translateX(-50%)';
+                }
+                bar.addEventListener('touchstart', function(e) {
+                    if (window.innerWidth > 560) return;
+                    startY = e.touches[0].clientY;
+                    startX = e.touches[0].clientX;
+                    dy = 0;
+                    dragging = true;
+                    bar.style.transition = 'none';
+                }, { passive: true });
+
+                bar.addEventListener('touchmove', function(e) {
+                    if (!dragging || startY === null) return;
+                    var ndy = e.touches[0].clientY - startY;
+                    var dx = e.touches[0].clientX - startX;
+                    if (Math.abs(dx) > Math.abs(ndy)) return; // geste plutôt horizontal : on laisse faire
+                    var collapsed = bar.classList.contains('collapsed');
+                    // Repliée : seul un glissement vers le haut (ndy<0) a un sens (déplier).
+                    // Dépliée : seul un glissement vers le bas (ndy>0) a un sens (replier).
+                    if ((collapsed && ndy > 0) || (!collapsed && ndy < 0)) return;
+                    dy = ndy;
+                    bar.style.transform = (baseTransform() + ' translateY(' + dy + 'px)').trim();
+                }, { passive: true });
+
+                function endDrag() {
+                    if (!dragging) return;
+                    dragging = false;
+                    bar.style.transition = '';
+                    bar.style.transform = '';
+                    var collapsed = bar.classList.contains('collapsed');
+                    if (!collapsed && dy > 90) setCollapsed(true);
+                    else if (collapsed && dy < -90) setCollapsed(false);
+                    startY = null; dy = 0;
+                }
+                bar.addEventListener('touchend', endDrag);
+                bar.addEventListener('touchcancel', endDrag);
+            })();
         })();
