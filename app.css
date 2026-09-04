@@ -26,6 +26,20 @@
 
 * { box-sizing: border-box; }
 
+/* Anneau de focus par défaut du navigateur neutralisé globalement (tap sur mobile déclenche
+   :focus, pas :focus-visible, qui lui ne se déclenche quasiment jamais au tap) : sans ça,
+   n'importe quel bouton/lien peut se retrouver avec un anneau natif inattendu. Remplacé par un
+   contour cohérent avec le design, uniquement visible en navigation clavier (:focus-visible),
+   et toujours à l'intérieur de la boîte (outline-offset négatif) pour ne jamais faire
+   "grossir" visuellement l'élément. Règle globale plutôt qu'au cas par cas par bouton : plus
+   robuste, couvre aussi les boutons ajoutés plus tard.
+   Les cas particuliers (ex. les +/- de Leaflet, qui ne sont pas de simples <button>/<a>) gardent
+   leur propre règle dédiée plus bas dans ce fichier. */
+button:focus, a:focus, [tabindex]:focus { outline: none; }
+button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid var(--green); outline-offset: -2px;
+}
+
 body {
     font-family: var(--font-sans);
     margin: 0; padding: 0;
