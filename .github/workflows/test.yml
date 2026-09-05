@@ -1,13 +1,20 @@
-name: Tests automatiques
+name: Tests et Déploiement
 
-# Se lance à chaque envoi sur GitHub (push) ou pull request, sans rien à
-# installer côté utilisateur : GitHub fournit la machine, Node et npm.
 on:
   push:
-    branches: ["**"]
+    branches: ["main"] # Déploie uniquement sur main
   pull_request:
     branches: ["**"]
-  workflow_dispatch: {} # permet aussi de le relancer manuellement depuis l'onglet Actions
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
 
 jobs:
   test:
@@ -21,8 +28,32 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Installer les dépendances (jsdom)
-        run: npm install
+      - name: Installer les dépendances
+        run: npm ci # "npm ci" est recommandé en CI à la place de "npm install"
 
       - name: Lancer les tests
         run: npm test
+
+  deploy:
+    # Condition essentielle : les tests doivent réussir ET on doit être sur la branche main
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Configurer Pages
+        uses: actions/configure-pages@v5
+
+      - name: Recharger les artefacts (ex: dossier racine ou /dist)
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.' # Change par './dist' ou le dossier de ton site si besoin
+
+      - name: Déployer sur GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
