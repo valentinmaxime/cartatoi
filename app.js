@@ -911,8 +911,13 @@ var map = L.map('map', { zoomControl: false }).setView(TRIP_CONFIG.mapCenter, TR
                 // que sur un écran tactile (jamais sur desktop à la souris), donc filtrer en
                 // plus par largeur/hauteur n'a d'autre effet que d'exclure les tablettes à tort.
                 if (!isActiveFn()) return;
-                if (scrollEl && scrollEl.scrollTop > 2) return; // laisse le scroll interne agir
                 axis = (horizontalOnWide && !isSmallScreen()) ? 'x' : 'y';
+                // Le verrou "être en haut du contenu" n'a de sens que pour l'axe vertical (mobile) :
+                // scroller la liste et glisser vers le bas pour fermer utilisent le même axe, il
+                // faut donc être en haut pour éviter toute ambiguïté. En horizontal (tablette), le
+                // scroll de la liste est vertical et le geste de fermeture horizontal : aucun
+                // conflit possible, donc aucune raison d'imposer d'être en haut du contenu.
+                if (axis === 'y' && scrollEl && scrollEl.scrollTop > 2) return;
                 startY = e.touches[0].clientY;
                 startX = e.touches[0].clientX;
                 currentY = 0; currentX = 0;
