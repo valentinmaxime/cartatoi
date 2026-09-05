@@ -99,6 +99,19 @@ body.panel-open .burger-btn { opacity: 0; pointer-events: none; transform: trans
 }
 .sidebar.open { transform: none; }
 
+/* Repère de préhension (grip) pour tablette : le panneau glisse horizontalement dans ce
+   format (ancré à gauche), donc une barre verticale sur le bord droit — cohérent avec le sens
+   réel du geste, plutôt qu'une barre horizontale en haut qui suggérerait à tort un glissement
+   vertical. Restreint aux formats larges (min-width/min-height) : sur petit écran, le panneau
+   devient une feuille glissante verticale avec son propre grip horizontal en haut (media query
+   plus bas) — les deux ne doivent jamais apparaître en même temps. */
+@media (hover: none) and (pointer: coarse) and (min-width: 561px) and (min-height: 561px) {
+    .sidebar::before {
+        content: ''; position: absolute; top: 50%; right: 8px; left: auto; transform: translateY(-50%);
+        width: 4px; height: 40px; border-radius: 99px; background: rgba(20,32,30,.18);
+    }
+}
+
 .sb-head {
     display: flex; align-items: center; gap: 11px;
     padding: 14px 16px;
@@ -1011,9 +1024,12 @@ body:has(.place-card.open) .field-bar { opacity: 0; pointer-events: none; }
     body.panel-open .field-bar { margin-left: 0; opacity: 0; pointer-events: none; }
     .fb-arrow { width: 50px; }
     .fb-go { height: 54px; }
-    /* Le chevron ne sert qu'au tap (desktop, pas de tactile) : sur mobile le glissement
-       bidirectionnel (bas = replier, haut = déplier) couvre déjà les deux sens — le grip
-       remplace visuellement le chevron pour indiquer que la barre se glisse. */
+}
+
+/* Chevron (tap) vs grip (glissement) : dépend de la capacité tactile de l'appareil, pas de la
+   taille de l'écran — une tablette est tactile mais dépasse le seuil de largeur/hauteur
+   ci-dessus, elle a donc quand même besoin du geste de glissement et du repère visuel associé. */
+@media (hover: none) and (pointer: coarse) {
     .fb-collapse { display: none; }
     .fb-grip { display: flex; }
 }

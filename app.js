@@ -892,20 +892,30 @@ var map = L.map('map', { zoomControl: false }).setView(TRIP_CONFIG.mapCenter, TR
         // interne qui défile réellement (le panneau lui-même ne scrolle pas) : le geste ne
         // s'engage que si ce conteneur est déjà tout en haut, sinon on laisse le défilement
         // normal de la liste faire son travail.
-        function enableSwipeToDismiss(panelEl, scrollEl, onDismiss, isActiveFn, getBaseTransform) {
-            var startY = null, startX = null, currentY = 0, dragging = false;
+        function enableSwipeToDismiss(panelEl, scrollEl, onDismiss, isActiveFn, getBaseTransform, horizontalOnWide) {
+            var startY = null, startX = null, currentY = 0, currentX = 0, dragging = false, axis = 'y';
             var THRESHOLD = 90; // px avant de considérer que c'est un "fermer", pas juste un tap
             // getBaseTransform (optionnel) : certains panneaux (barre terrain) ont déjà un
             // transform CSS de base (translateX de centrage) — sans le préserver pendant le
             // geste, l'écraser avec le seul translateY() du glissement le ferait sauter de côté.
             var baseTransform = getBaseTransform || function() { return ''; };
+            // horizontalOnWide (optionnel) : le panneau latéral glisse horizontalement sur
+            // tablette (panneau latéral classique) mais verticalement sur mobile (feuille
+            // glissante plein écran) — l'axe du geste doit suivre celui qui est réellement actif
+            // au moment du toucher, pas être fixé une fois pour toutes. Non utilisé par la fiche
+            // de lieu, toujours verticale.
+            var isSmallScreen = function() { return window.matchMedia('(max-width: 560px), (max-height: 560px)').matches; };
 
             panelEl.addEventListener('touchstart', function(e) {
-                if (!isActiveFn() || !isMobileViewport()) return;
+                // Pas de vérification de taille d'écran ici : touchstart ne se déclenche déjà
+                // que sur un écran tactile (jamais sur desktop à la souris), donc filtrer en
+                // plus par largeur/hauteur n'a d'autre effet que d'exclure les tablettes à tort.
+                if (!isActiveFn()) return;
                 if (scrollEl && scrollEl.scrollTop > 2) return; // laisse le scroll interne agir
+                axis = (horizontalOnWide && !isSmallScreen()) ? 'x' : 'y';
                 startY = e.touches[0].clientY;
                 startX = e.touches[0].clientX;
-                currentY = 0;
+                currentY = 0; currentX = 0;
                 dragging = true;
                 panelEl.style.transition = 'none';
             }, { passive: true });
@@ -914,10 +924,17 @@ var map = L.map('map', { zoomControl: false }).setView(TRIP_CONFIG.mapCenter, TR
                 if (!dragging || startY === null) return;
                 var dy = e.touches[0].clientY - startY;
                 var dx = e.touches[0].clientX - startX;
-                if (dy < 0) { dragging = false; panelEl.style.transition = ''; panelEl.style.transform = ''; return; } // vers le haut : on relâche, c'est un scroll
-                if (Math.abs(dx) > Math.abs(dy)) return; // geste plutôt horizontal : on laisse faire
-                currentY = dy;
-                panelEl.style.transform = (baseTransform() + ' translateY(' + dy + 'px)').trim();
+                if (axis === 'x') {
+                    if (dx > 0) { dragging = false; panelEl.style.transition = ''; panelEl.style.transform = ''; return; } // vers la droite : le panneau est ancré à gauche, ce n'est pas un "fermer"
+                    if (Math.abs(dy) > Math.abs(dx)) return; // geste plutôt vertical : on laisse faire
+                    currentX = dx;
+                    panelEl.style.transform = (baseTransform() + ' translateX(' + dx + 'px)').trim();
+                } else {
+                    if (dy < 0) { dragging = false; panelEl.style.transition = ''; panelEl.style.transform = ''; return; } // vers le haut : on relâche, c'est un scroll
+                    if (Math.abs(dx) > Math.abs(dy)) return; // geste plutôt horizontal : on laisse faire
+                    currentY = dy;
+                    panelEl.style.transform = (baseTransform() + ' translateY(' + dy + 'px)').trim();
+                }
             }, { passive: true });
 
             function endDrag() {
@@ -925,14 +942,15 @@ var map = L.map('map', { zoomControl: false }).setView(TRIP_CONFIG.mapCenter, TR
                 dragging = false;
                 panelEl.style.transition = '';
                 panelEl.style.transform = '';
-                if (currentY > THRESHOLD) onDismiss();
-                startY = null; currentY = 0;
+                if (axis === 'x') { if (currentX < -THRESHOLD) onDismiss(); }
+                else { if (currentY > THRESHOLD) onDismiss(); }
+                startY = null; startX = null; currentY = 0; currentX = 0;
             }
             panelEl.addEventListener('touchend', endDrag);
             panelEl.addEventListener('touchcancel', endDrag);
         }
 
-        enableSwipeToDismiss(sidebar, sidebar.querySelector('.sb-scroll'), function() { setPanel(false); }, function() { return sidebar.classList.contains('open'); });
+        enableSwipeToDismiss(sidebar, sidebar.querySelector('.sb-scroll'), function() { setPanel(false); }, function() { return sidebar.classList.contains('open'); }, null, true);
 
         var timelineList = document.getElementById('timelineList');
         var dayBadge = document.getElementById('dayBadge');
@@ -1882,7 +1900,8 @@ var map = L.map('map', { zoomControl: false }).setView(TRIP_CONFIG.mapCenter, TR
                     return document.body.classList.contains('panel-open') ? 'translateX(calc(-50% + 196px))' : 'translateX(-50%)';
                 }
                 bar.addEventListener('touchstart', function(e) {
-                    if (!isMobileViewport()) return;
+                    // Pas de vérification de taille d'écran : touchstart ne se déclenche déjà
+                    // que sur un écran tactile, filtrer en plus par largeur excluait les tablettes.
                     startY = e.touches[0].clientY;
                     startX = e.touches[0].clientX;
                     dy = 0;
