@@ -2,7 +2,7 @@
 // Android pour proposer "Ajouter à l'écran d'accueil" comme une vraie PWA, pas un simple
 // favori), et met en cache les fichiers propres à l'app (pas les tuiles de carte ni les API
 // météo/itinéraire — ça, c'est un chantier à part, plus gros, pas fait ici).
-var CACHE_NAME = 'carte-voyage-v4';
+var CACHE_NAME = 'carte-voyage-v8';
 var CORE_FILES = [
     './app.css',
     './app.js'
